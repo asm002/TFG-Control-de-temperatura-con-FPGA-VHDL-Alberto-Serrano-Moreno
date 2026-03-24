@@ -11,3 +11,4 @@
 *.bak
 /ADC/db
 /ADC/incremental_db
+*.cdf
