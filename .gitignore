@@ -40,7 +40,6 @@
 # --------------------------------------------------------------
 # 4. SALVAR CARPETAS DE IPs COMPLETAS (Estén donde estén)
 !**/ADC_IP/**
-!**/PLL_IP/**
 
 # --------------------------------------------------------------
 # 5. IGNORAR CARPETAS BASURA DE QUARTUS
