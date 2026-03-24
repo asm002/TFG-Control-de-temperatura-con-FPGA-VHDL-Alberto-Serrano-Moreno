@@ -13,3 +13,6 @@
 */incremental_db
 *.cdf
 *.qws
+*.qarlog
+*.qdf
+ADC/qar_info.json
