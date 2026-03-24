@@ -1,18 +1,33 @@
+# 1. IGNORAR ABSOLUTAMENTE TODO
+*
 
-*.rpt
-*.done
-*.smsg
-*.summary
-*.jdi
-*.pin
-*.pof
-*.sld
-*.sof
-*.bak
-*/db
-*/incremental_db
-*.cdf
-*.qws
-*.qarlog
-*.qdf
-ADC/qar_info.json
+# 2. EXCEPCIÓN VITAL: No ignorar las carpetas (necesario para que Git entre a buscar los archivos permitidos)
+!*/
+
+# 3. LISTA BLANCA DE ARCHIVOS PERMITIDOS (El oro de tu proyecto)
+# --------------------------------------------------------------
+# Código fuente
+!*.vhd
+!*.vhdl
+!*.v
+
+# Archivos de Quartus (Proyecto y Configuración)
+!*.qpf
+!*.qsf
+!*.sdc
+!*.bdf
+!*.bsf
+
+# Documentación y configuración de Git
+!.gitignore
+!*.md
+!*.txt
+!*.pdf
+
+# --------------------------------------------------------------
+# (Opcional) Volver a ignorar carpetas basura ESPECÍFICAS de Quartus 
+# por si dentro se generara algún archivo con extensiones permitidas
+db/
+incremental_db/
+output_files/
+simulation/
