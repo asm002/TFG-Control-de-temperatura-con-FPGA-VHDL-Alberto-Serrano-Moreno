@@ -1,0 +1,13 @@
+
+*.rpt
+*.done
+*.smsg
+*.summary
+*.jdi
+*.pin
+*.pof
+*.sld
+*.sof
+*.bak
+/ADC/db
+/ADC/incremental_db
