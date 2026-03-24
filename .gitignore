@@ -9,6 +9,7 @@
 *.sld
 *.sof
 *.bak
-/ADC/db
-/ADC/incremental_db
+*/db
+*/incremental_db
 *.cdf
+*.qws
