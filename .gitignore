@@ -1,33 +1,52 @@
 # 1. IGNORAR ABSOLUTAMENTE TODO
 *
 
-# 2. EXCEPCIÓN VITAL: No ignorar las carpetas (necesario para que Git entre a buscar los archivos permitidos)
+# 2. EXCEPCIÓN VITAL: Permitir a Git entrar en TODAS las carpetas y subcarpetas
 !*/
+!**/
 
-# 3. LISTA BLANCA DE ARCHIVOS PERMITIDOS (El oro de tu proyecto)
+# 3. LISTA BLANCA DE ARCHIVOS PERMITIDOS (Búsqueda profunda en cualquier carpeta)
 # --------------------------------------------------------------
 # Código fuente
-!*.vhd
-!*.vhdl
-!*.v
+!**/*.vhd
+!**/*.vhdl
+!**/*.v
+!**/*.sv
+!**/*.mif
+!**/*.hex
 
 # Archivos de Quartus (Proyecto y Configuración)
-!*.qpf
-!*.qsf
-!*.sdc
-!*.bdf
-!*.bsf
+!**/*.qpf
+!**/*.qsf
+!**/*.sdc
+!**/*.tcl
+!**/*.bdf
+!**/*.bsf
 
-# Documentación y configuración de Git
+# Archivos vitales de los IP Cores
+!**/*.qip
+!**/*.sip
+!**/*.cmp
+!**/*.qsys
+!**/*.ip
+
+# Documentación y configuración
 !.gitignore
-!*.md
-!*.txt
-!*.pdf
+!.gitattributes
+!**/*.md
+!**/*.txt
+!**/*.pdf
 
 # --------------------------------------------------------------
-# (Opcional) Volver a ignorar carpetas basura ESPECÍFICAS de Quartus 
-# por si dentro se generara algún archivo con extensiones permitidas
-db/
-incremental_db/
-output_files/
-simulation/
+# 4. SALVAR CARPETAS DE IPs COMPLETAS (Estén donde estén)
+!**/ADC_IP/**
+!**/PLL_IP/**
+
+# --------------------------------------------------------------
+# 5. IGNORAR CARPETAS BASURA DE QUARTUS
+# (Las bloqueamos estén donde estén)
+**/db/
+**/incremental_db/
+**/output_files/
+**/simulation/
+**/greybox_tmp/
