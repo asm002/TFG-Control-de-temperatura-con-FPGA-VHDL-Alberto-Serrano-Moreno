@@ -13,7 +13,9 @@ use IEEE.numeric_std.all;
 entity MEDIA_MOVIL is
 	GENERIC(
 		N_BITS_DATO: integer := 12;
-		N_BITS_MUESTRAS : integer := 6
+		N_BITS_MUESTRAS : integer := 6;
+		VENTANA_TIEMPO_MS: integer := 20;
+		CLK_FREC: integer := 10E6
 		);
 	PORT(
 		CLK : in std_logic;
@@ -36,14 +38,20 @@ architecture Behavioral of MEDIA_MOVIL is
 	constant BITS_SUMA : integer := N_BITS_DATO+N_BITS_MUESTRAS;
 	signal SUMA : unsigned(BITS_SUMA-1 downto 0);
 	
-	--3125*1/(10*10^6)*1000*64 = 20ms (50hz)
-	constant ciclos_diezmado : integer := 3125; -- ciclos que deben pasar entre la captura de un dato y el siguiente para que cuando se hayan capturado 64 (el total), hayan pasado 20ms (50hz)
-	signal contador_diezmado : integer range 0 to ciclos_diezmado - 1 := 0;
-	signal capturar_dato : std_logic := '0';
+	constant FRECUENCIA_MUESTREO : integer := (NUM_MUESTRAS*1000)/(VENTANA_TIEMPO_MS);
+	signal PULSE_FREC_MUESTREO_HZ : std_logic := '0';
+	signal capturar_dato : boolean := false;
 	
 	begin
 		-- < mapeo de entidades internas > --
-		
+		GENERADOR_PULSOS_FRECUENCIA_MUESTREO_HZ : entity work.GENERADOR_PULSOS
+																generic map(CLK_FREC => CLK_FREC, 
+																				PULSE_FREC => FRECUENCIA_MUESTREO
+																				)
+																port map(
+																		CLK => CLK,
+																		PULSE => PULSE_FREC_MUESTREO_HZ
+																		);
 		
 		-- < mapeo de señales combinacionales > --
 		-- SUMA(15 downto 4) para 12 bits y 16 muestras
@@ -61,19 +69,17 @@ architecture Behavioral of MEDIA_MOVIL is
 						suma_var := (others => '0');
 						DATOS <= (others => (others => '0'));
 						SUMA <= (others => '0');
-						capturar_dato <= '0';
-						contador_diezmado <= 0;
+						capturar_dato <= false;
 						
 					else
-					
-						if contador_diezmado = ciclos_diezmado - 1 then
-							contador_diezmado <= 0;
-							capturar_dato <= '1';
-						else
-							contador_diezmado <= contador_diezmado + 1;
+						
+						if PULSE_FREC_MUESTREO_HZ = '1' then
+						
+							capturar_dato <= true;
+							
 						end if;
 						
-						if DATO_LISTO = '1' and capturar_dato = '1' then
+						if DATO_LISTO = '1' and capturar_dato = true then
 						
 							for i in NUM_MUESTRAS-1 downto 1 loop	-- desplazar los datos a la izquierda. El nuevo dato entra a la posicion 0
 								DATOS(i) <= DATOS(i-1);	-- el dato que se va a perder, es el mas significativo (mayor indice, a la izquierda del todo)
@@ -84,7 +90,7 @@ architecture Behavioral of MEDIA_MOVIL is
 							suma_var := suma_var + resize(unsigned(DATO), BITS_SUMA) - resize(unsigned(DATOS(NUM_MUESTRAS-1)), BITS_SUMA);	-- añadimos a la suma el dato nuevo y restamos el mas antiguo (ultima posicion)
 							
 							SUMA <= suma_var;
-							capturar_dato <= '0';
+							capturar_dato <= false;
 							
 						end if;
 					

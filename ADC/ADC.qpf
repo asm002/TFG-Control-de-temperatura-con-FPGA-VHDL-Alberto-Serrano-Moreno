@@ -18,15 +18,14 @@
 #
 # Quartus Prime
 # Version 17.1.0 Build 590 10/25/2017 SJ Lite Edition
-# Date created = 18:09:25  March 21, 2026
+# Date created = 22:28:06  March 24, 2026
 #
 # -------------------------------------------------------------------------- #
 
 QUARTUS_VERSION = "17.1"
-DATE = "18:09:25  March 21, 2026"
+DATE = "22:28:06  March 24, 2026"
 
 # Revisions
 
+PROJECT_REVISION = "ADC"
 PROJECT_REVISION = "ADC_MEDIA_MOVIL"
-PROJECT_REVISION = "ADC_DISPLAYS_TENSION"
-PROJECT_REVISION = "ADC_DISPLAYS"

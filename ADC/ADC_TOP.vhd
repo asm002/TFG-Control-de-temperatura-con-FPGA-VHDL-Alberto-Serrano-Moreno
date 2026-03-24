@@ -2,7 +2,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-entity ADC_MEDIA_MOVIL is
+entity ADC_TOP is
 	PORT(
 			MAX10_CLK1_50 : in STD_LOGIC;
 			ADC_CLK_10 : in STD_LOGIC;
@@ -20,7 +20,7 @@ entity ADC_MEDIA_MOVIL is
 	);
 END entity;
 
-architecture Behavioral of ADC_MEDIA_MOVIL is
+architecture Behavioral of ADC_TOP is
 	-- < definicion de señales internas > --
 	signal BCD0 : STD_LOGIC_VECTOR(3 downto 0);
 	signal BCD1 : STD_LOGIC_VECTOR(3 downto 0);
@@ -70,7 +70,10 @@ architecture Behavioral of ADC_MEDIA_MOVIL is
 						);
 						
 		MEDIA_MOVIL0 : entity work.MEDIA_MOVIL 
-							generic map(N_BITS_DATO => 12, N_BITS_MUESTRAS => 6)
+							generic map(N_BITS_DATO => 12, 
+											N_BITS_MUESTRAS => 6,
+											VENTANA_TIEMPO_MS => 20,
+											CLK_FREC => 10E6)
 							port map(
 										CLK => ADC_CLK,
 										DATO_LISTO => ADC_VALID,
