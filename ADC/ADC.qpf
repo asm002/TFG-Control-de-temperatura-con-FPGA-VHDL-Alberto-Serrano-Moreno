@@ -18,14 +18,25 @@
 #
 # Quartus Prime
 # Version 17.1.0 Build 590 10/25/2017 SJ Lite Edition
+<<<<<<< Updated upstream
 # Date created = 23:16:49  March 24, 2026
+=======
+# Date created = 00:56:47  March 25, 2026
+>>>>>>> Stashed changes
 #
 # -------------------------------------------------------------------------- #
 
 QUARTUS_VERSION = "17.1"
+<<<<<<< Updated upstream
 DATE = "23:16:49  March 24, 2026"
+=======
+DATE = "00:56:47  March 25, 2026"
+>>>>>>> Stashed changes
 
 # Revisions
 
 PROJECT_REVISION = "ADC"
+<<<<<<< Updated upstream
 PROJECT_REVISION = "ADC_MEDIA_MOVIL"
+=======
+>>>>>>> Stashed changes
