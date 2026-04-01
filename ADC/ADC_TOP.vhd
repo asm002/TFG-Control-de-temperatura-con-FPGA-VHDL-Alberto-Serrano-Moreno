@@ -35,7 +35,6 @@ architecture Behavioral of ADC_TOP is
 	signal ADC_CLK : std_logic;
 	
 	signal CH1: std_LOGIC_VECTOR(11 downto 0);
-	signal CH2: std_LOGIC_VECTOR(11 downto 0);
 	signal ADC_VALID: std_LOGIC;
 	
 	signal CH1_PROMEDIADO: std_LOGIC_VECTOR(11 downto 0);
@@ -64,8 +63,7 @@ architecture Behavioral of ADC_TOP is
 						clk_in => MAX10_CLK1_50,
 						clk_out => ADC_CLK,
 						reset => ARDUINO_RESET_N,
-						ch1_data => CH1,  
-						ch2_data => CH2,
+						ch1_data => CH1,
 						adc_valid => ADC_VALID
 						);
 						

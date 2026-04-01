@@ -11,6 +11,10 @@ entity ADC_DRIVER is
 
 		 ch1_data : out std_logic_vector(11 downto 0);
 		 ch2_data : out std_logic_vector(11 downto 0);
+		 ch3_data : out std_logic_vector(11 downto 0);
+		 ch4_data : out std_logic_vector(11 downto 0);
+		 ch5_data : out std_logic_vector(11 downto 0);
+		 ch6_data : out std_logic_vector(11 downto 0);
 
 		 adc_valid : out std_logic
 	);
@@ -108,17 +112,29 @@ architecture Behavioral of ADC_DRIVER is
 		
 		-- procesos --
 		process(PLL_c0)
-			variable canal :integer range 0 to 31 :=1;
+			variable canal :integer range 0 to 31 := 1;
 			begin			
 				if rising_edge(PLL_c0) then
 				adc_valid <= '0';	-- siempre a nivel bajo salvo que se indique lo contrario (cuando el ultimo canal haya leido)
 					if command_ready = '1' and response_valid = '1' then
 						if response_channel="00001" then
-							ch1_data<=response_data(11 downto 0);
-							canal:=2;
+							ch1_data<=response_data;
+							canal:= canal + 1;
 						elsif response_channel="00010" then
-							ch2_data<=response_data(11 downto 0);
-							canal:=1;
+							ch2_data<=response_data;
+							canal:= canal + 1;
+						elsif response_channel="00011" then
+							ch3_data<=response_data;
+							canal:= canal + 1;
+						elsif response_channel="00100" then
+							ch4_data<=response_data;
+							canal:= canal + 1;
+						elsif response_channel="00101" then
+							ch5_data<=response_data;
+							canal:= canal + 1;
+						elsif response_channel="00110" then
+							ch6_data<=response_data;
+							canal:= 1;
 							adc_valid <= '1';	-- solo damos un pulso, en el siguiente flanco se pondra a cero
 						end if;
 						command_channel<=std_logic_vector(TO_UNSIGNED(canal,5));
