@@ -34,9 +34,10 @@ architecture Behavioral of ADC_DRIVER is
 	signal response_startofpacket : STD_LOGIC;
 	signal response_endofpacket : STD_LOGIC;
 	
-	signal PLL_c0 : STD_LOGIC;
-	signal PLL_c1 : STD_LOGIC;
+	signal PLL_c0 : STD_LOGIC; -- RELOJ DE LA LOGICA PERIFERICA (25 MHZ)
+	signal PLL_c1 : STD_LOGIC; -- RELOJ DEL ADC (10 MHZ)
 	signal PLL_locked : STD_LOGIC;
+	-- En el manual se hace al contrario, se usa c0 para el adc y c1 para la logica. No importa, siempre que el asistente del PLL (ip parameter editor) este bien configurado y se tenga en cuenta cual es cual
 	
 	-- definicion de componentes (otra forma de declarar y usar entidades) --
 	
@@ -108,7 +109,6 @@ architecture Behavioral of ADC_DRIVER is
 		--command_endofpacket <= '1';
 		
 		clk_out <= PLL_c0;
-		--adc_valid <= response_valid;
 		
 		-- procesos --
 		process(PLL_c0)
