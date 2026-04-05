@@ -12,17 +12,17 @@ use IEEE.numeric_std.all;
 -- de la onda. Al hacer la media se anula uno con otro y se filtra el ruido
 entity MEDIA_MOVIL is
 	GENERIC(
-		N_BITS_DATO: integer := 12;
-		N_BITS_MUESTRAS : integer := 6;
-		VENTANA_TIEMPO_MS: integer := 20;
-		CLK_FREC: integer := 10E6
+		N_BITS_DATO: integer := 12;			-- tamaño del dato a promediar/filtrar
+		N_BITS_MUESTRAS : integer := 6;		-- si se desean 64 muestras -> 6 bits (2^6=64)
+		VENTANA_TIEMPO_MS: integer := 20;	-- en milisegundos
+		CLK_FREC: integer := 10E6				-- frecuencia del reloj de entrada, en hercios
 		);
 	PORT(
-		CLK : in std_logic;
-		RESET: in std_logic := '0';
-		DATO_LISTO: in std_logic := '0';
-		DATO: in std_logic_vector(N_BITS_DATO-1 downto 0);
-		DATO_PROMEDIADO: out std_logic_vector(N_BITS_DATO-1 downto 0)
+		CLK : in std_logic;															-- reloj de entrada
+		RESET: in std_logic := '0';												-- reset
+		DATO_LISTO: in std_logic := '0';											-- se debe recibir un pulso cada vez que el dato se haya actualizado, para registrar una nueva muestra
+		DATO: in std_logic_vector(N_BITS_DATO-1 downto 0);					--	dato de entrada
+		DATO_PROMEDIADO: out std_logic_vector(N_BITS_DATO-1 downto 0)	-- dato de salida, promediado/filtrado
 		);
 END entity;
 
