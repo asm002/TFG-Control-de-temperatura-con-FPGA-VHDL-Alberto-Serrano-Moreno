@@ -41,6 +41,9 @@ with BIN select displayseg(6 downto 0) <=
 displayseg(7)<=not DP;
 
 dispseg <= displayseg when (not BCD) else displayseg when (BCD and unsigned(BIN)<10) else (others=>'1');
+-- Si no BCD -> representacion por defecto
+-- Si BCD y ademas dato<10 -> representacion por defecto
+-- Si BCD y dato>=10 -> todos a '1' (display apagado) 
 	
 D7SEG<=dispseg when (OFF='0') else (others=>'1');
 
