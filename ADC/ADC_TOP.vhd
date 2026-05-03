@@ -27,10 +27,7 @@ architecture Behavioral of ADC_TOP is
 	signal BCD2 : STD_LOGIC_VECTOR(3 downto 0);
 	signal BCD3 : STD_LOGIC_VECTOR(3 downto 0);
 	
-	signal DATO_ESCALADO : unsigned(21 downto 0);
-	signal MULTIPLICACION : unsigned(24 downto 0);
-	signal DIVISION : unsigned(12 downto 0);
-	signal RES : STD_LOGIC_VECTOR(12 downto 0);
+	signal MILIVOLTIOS : STD_LOGIC_VECTOR(12 downto 0);
 	
 	signal ADC_CLK : std_logic;
 	
@@ -47,16 +44,7 @@ architecture Behavioral of ADC_TOP is
 	signal PULSE_4HZ : std_logic := '0';
 	
 	begin
-		-- < mapeo de entidades internas > --
-		BIN2BCD0 : entity work.BIN2BCD_9999 generic map(13) port map(RES, BCD0, BCD1, BCD2, BCD3);
-		
-		D0 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD0_P, D7SEG => HEX0, DP => '0');
-		D1 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD1_P, D7SEG => HEX1, DP => '0');
-		D2 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD2_P, D7SEG => HEX2, DP => '0');
-		D3 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD3_P, D7SEG => HEX3, DP => '1');
-		D4 : entity work.DISPLAY port map (BIN => "0000", D7SEG => HEX4, OFF => '1');
-		D5 : entity work.DISPLAY port map (BIN => "0000", D7SEG => HEX5, OFF => '1');	
-	
+		-- < mapeo de entidades internas > --	
 		
 		ADC_DRIVER0 : entity work.ADC_DRIVER
 			port map(
@@ -84,12 +72,24 @@ architecture Behavioral of ADC_TOP is
 												CLK => ADC_CLK,
 												PULSE => PULSE_4HZ
 												);
+												
+		CONVERSOR_A_mV :	entity work.ADC_A_mV
+								port map(
+											cuentas_ADC => CH1_PROMEDIADO,
+											conversion_mv => MILIVOLTIOS
+											);
+											
+		BIN2BCD0 : entity work.BIN2BCD_9999 generic map(13) port map(MILIVOLTIOS, BCD0, BCD1, BCD2, BCD3);
+		
+		D0 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD0_P, D7SEG => HEX0, DP => '0');
+		D1 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD1_P, D7SEG => HEX1, DP => '0');
+		D2 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD2_P, D7SEG => HEX2, DP => '0');
+		D3 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD3_P, D7SEG => HEX3, DP => '1');
+		D4 : entity work.DISPLAY port map (BIN => "0000", D7SEG => HEX4, OFF => '1');
+		D5 : entity work.DISPLAY port map (BIN => "0000", D7SEG => HEX5, OFF => '1');
 		
 		-- < mapeo de señales combinacionales > --
-		DATO_ESCALADO <= (unsigned(CH1_PROMEDIADO)*to_unsigned(1000, 10));	-- multiplicamos por 1000 para representar del 0 al 5000 y luego en los displays encendemos el punto decimal en el primer digito, de manera que queda 5,000
-		MULTIPLICACION <= DATO_ESCALADO*to_unsigned(5, 3);	-- multiplicacion por 5, el rango de tension
-		DIVISION <= MULTIPLICACION(24 downto 12);	-- division entre 4096 que equivale a un desplazamiento a la derecha de 12 bits (2^12=4096) o quedarse con los 13 bits (25 totales - 12 desplazados y eliminados) mas significativos
-		RES <= std_logic_vector(DIVISION);
+		
 		
 		-- procesos --
 		process(ADC_CLK)
