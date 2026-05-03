@@ -1,5 +1,4 @@
 ----------------------------------------------------------------------------------------
--- Hecho por ChatGPT a partir de mi codigo: BIN2BCD_999
 -- Convierte un número binario de hasta 9999 en 4 dígitos BCD
 ----------------------------------------------------------------------------------------
 library IEEE;
@@ -35,9 +34,10 @@ begin
     centenas  <= (entero / 100) mod 10;
     millares  <= (entero / 1000) mod 10;
 
-    BCD3 <= std_logic_vector(TO_UNSIGNED(millares, 4)) when entero <= 9999 else "0000";
-    BCD2 <= std_logic_vector(TO_UNSIGNED(centenas, 4)) when entero <= 9999 else "0000";
-    BCD1 <= std_logic_vector(TO_UNSIGNED(decenas, 4)) when entero <= 9999 else "0000";
-    BCD0 <= std_logic_vector(TO_UNSIGNED(unidades, 4)) when entero <= 9999 else "0000";
+    -- Si se pasa de 9999 (99.99 C), saturamos los displays mostrando "9999"
+    BCD3 <= std_logic_vector(TO_UNSIGNED(millares, 4)) when entero <= 9999 else "1001"; -- 9
+    BCD2 <= std_logic_vector(TO_UNSIGNED(centenas, 4)) when entero <= 9999 else "1001"; -- 9
+    BCD1 <= std_logic_vector(TO_UNSIGNED(decenas, 4))  when entero <= 9999 else "1001"; -- 9
+    BCD0 <= std_logic_vector(TO_UNSIGNED(unidades, 4)) when entero <= 9999 else "1001"; -- 9
 
 end architecture;
