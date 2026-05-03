@@ -3,18 +3,17 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 entity mV_A_TEMP is
-	GENERIC(
-		N_BITS_mV : integer := 13;																	-- bits necesarios para representar la tension de referencia en mV (por ejemplo, 5000)
-		N_BITS_TEMP : integer := 16
-	);
 	PORT(
-		mv : in std_logic_vector(N_BITS_mV-1 downto 0);
-		conversion_centesimas_gradoC : out signed(N_BITS_TEMP-1 downto 0)
+		mv : in std_logic_vector(12 downto 0);
+		conversion_centesimas_gradoC : out signed(15 downto 0)
 	);
 END entity;
 
 architecture Behavioral of mV_A_TEMP is
 	-- < definicion de señales internas, tipos y constantes > --
+	constant N_BITS_mV : integer := 13;															-- bits necesarios para representar la tension de referencia en mV (por ejemplo, 5000)
+	constant N_BITS_TEMP : integer := 16
+	
 	constant N_BITS_mv_ESCALADO : integer := N_BITS_mV + 1 + 5;							-- producto de dos datos de 14 y 5 bits -> 19 BITS
 	constant N_BITS_RESTA : integer := N_BITS_mv_ESCALADO;										
 
