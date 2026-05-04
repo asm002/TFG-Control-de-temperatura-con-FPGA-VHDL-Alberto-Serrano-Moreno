@@ -42,13 +42,13 @@ architecture Behavioral of ADC_TOP is
 	signal BCD2_cc : STD_LOGIC_VECTOR(3 downto 0);
 	signal BCD3_cc : STD_LOGIC_VECTOR(3 downto 0);
 	
-	signal DP_H3 : std_logic;
-	signal DP_H2 : std_logic;
+	signal DP_H1 : std_logic;
+	signal D7SEG_H3 : STD_LOGIC_VECTOR (7 downto 0);
 	
 	signal TEMP_MILIVOLTIOS : STD_LOGIC_VECTOR(12 downto 0);
 	signal TEMP_CENTIGRADOS : signed(15 downto 0);
 	signal TEMP_CENTIGRADOS_ABSOLUTA : std_LOGIC_VECTOR(15 downto 0);
-	signal temperatura_negativa : std_logic := '0';				-- '0' positiva; '1' negativa
+	signal temperatura_negativa : std_logic := '0';									-- '0' positiva; '1' negativa
 	
 	signal CH1_PROMEDIADO: std_LOGIC_VECTOR(11 downto 0);
 	signal PULSE_4HZ : std_logic := '0';
@@ -99,23 +99,31 @@ architecture Behavioral of ADC_TOP is
 
 		
 		D0 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD0_P, D7SEG => HEX0, DP => '0');
-		D1 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD1_P, D7SEG => HEX1, DP => '0');
-		D2 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD2_P, D7SEG => HEX2, DP => DP_H2);
-		D3 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD3_P, D7SEG => HEX3, DP => DP_H3);
+		D1 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD1_P, D7SEG => HEX1, DP => DP_H1);
+		D2 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD2_P, D7SEG => HEX2, DP => '0');
+		D3 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD3_P, D7SEG => D7SEG_H3, DP => '1');
+		
+		D4 : entity work.DISPLAY generic map(BCD => true) port map (BIN => "0000", D7SEG => HEX4, OFF => '1');
 
-		D5 : entity work.DISPLAY port map (BIN => "0000", D7SEG => HEX5, OFF => '1');
 		
 		-- < logica combinacional; asignaciones directas > --
-		temperatura_negativa <= TEMP_CENTIGRADOS(15);								-- el ultimo bit es el de signo
-
+		
 		TEMP_CENTIGRADOS_ABSOLUTA <= std_LOGIC_VECTOR(abs(TEMP_CENTIGRADOS));
 		
-		DP_H3 <= '1' when SW(0) = '1' else '0'; -- Muestra X.XXX (Voltios)
-		DP_H2 <= '1' when SW(0) = '0' else '0'; -- Muestra XX.XX (Grados)
+		temperatura_negativa <= TEMP_CENTIGRADOS(15);									-- el ultimo bit es el de signo
 		
-		HEX4 <= "10111111" when (SW(0) = '0' and temperatura_negativa = '1') else "11111111";
+		HEX5 <= "01000110" when SW(0) = '0' else "01000001";
+		
+		with std_logic_vector'(SW(0) & temperatura_negativa) select HEX3 <= 
+					"10111111" when "01",  														-- modo temperatura y es negativa -> mostrar signo menos
+					"11111111" when "00",  														-- modo temperatura y es positiva -> no signo menos, apagar display
+					D7SEG_H3   when others; 													-- modo tension -> dejar pasar los millares de milivoltio
+		
+		
+		DP_H1 <= '1' when SW(0) = '0' else '0'; 											-- punto decimal de HEX1 ; para mostrar XX.X (grados)		
 		
 		-- procesos --
+		
 		process(ADC_CLK)
 			-- < declaracion de variables >
 			
@@ -132,10 +140,10 @@ architecture Behavioral of ADC_TOP is
 							BCD3_P <= BCD3_mv;
 						else
 							-- MODO TEMPERATURA
-							BCD0_P <= BCD0_cc;
-							BCD1_P <= BCD1_cc;
-							BCD2_P <= BCD2_cc;
-							BCD3_P <= BCD3_cc;
+							BCD0_P <= BCD1_cc;
+							BCD1_P <= BCD2_cc;
+							BCD2_P <= BCD3_cc;
+							BCD3_P <= "0000";
 						end if;
 					
 				end if;
