@@ -14,7 +14,7 @@ END entity;
 
 architecture Behavioral of ADC_A_mV is
 	-- < definicion de señales internas > --
-	constant N_BITS_mV : integer := 13															-- bits necesarios para representar la tension de referencia en mV (por ejemplo, 5000)
+	constant N_BITS_mV : integer := 13;															-- bits necesarios para representar la tension de referencia en mV (por ejemplo, 5000)
 	constant VREFmv : integer := 5000;															-- tension de referencia en milivoltios
 	
 	constant N_BITS_FACTOR : integer := 3+10;													-- 3 bits para V_ref y 10 bits para 1000

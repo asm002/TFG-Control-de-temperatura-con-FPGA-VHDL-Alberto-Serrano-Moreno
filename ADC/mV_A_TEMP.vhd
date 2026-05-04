@@ -12,7 +12,7 @@ END entity;
 architecture Behavioral of mV_A_TEMP is
 	-- < definicion de señales internas, tipos y constantes > --
 	constant N_BITS_mV : integer := 13;															-- bits necesarios para representar la tension de referencia en mV (por ejemplo, 5000)
-	constant N_BITS_TEMP : integer := 16
+	constant N_BITS_TEMP : integer := 16;
 	
 	constant N_BITS_mv_ESCALADO : integer := N_BITS_mV + 1 + 5;							-- producto de dos datos de 14 y 5 bits -> 19 BITS
 	constant N_BITS_RESTA : integer := N_BITS_mv_ESCALADO;										
