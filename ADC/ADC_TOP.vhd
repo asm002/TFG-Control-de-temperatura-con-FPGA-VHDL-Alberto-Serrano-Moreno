@@ -21,26 +21,36 @@ entity ADC_TOP is
 END entity;
 
 architecture Behavioral of ADC_TOP is
-	-- < definicion de señales internas > --
-	signal BCD0 : STD_LOGIC_VECTOR(3 downto 0);
-	signal BCD1 : STD_LOGIC_VECTOR(3 downto 0);
-	signal BCD2 : STD_LOGIC_VECTOR(3 downto 0);
-	signal BCD3 : STD_LOGIC_VECTOR(3 downto 0);
-	
-	signal MILIVOLTIOS : STD_LOGIC_VECTOR(12 downto 0);
-	
+	-- < definicion de señales internas, tipos y constantes > --
 	signal ADC_CLK : std_logic;
 	
 	signal CH1: std_LOGIC_VECTOR(11 downto 0);
 	signal ADC_VALID: std_LOGIC;
 	
-	signal CH1_PROMEDIADO: std_LOGIC_VECTOR(11 downto 0);
+	signal BCD0_mv : STD_LOGIC_VECTOR(3 downto 0);
+	signal BCD1_mv : STD_LOGIC_VECTOR(3 downto 0);
+	signal BCD2_mv : STD_LOGIC_VECTOR(3 downto 0);
+	signal BCD3_mv : STD_LOGIC_VECTOR(3 downto 0);
 	
 	signal BCD0_P : STD_LOGIC_VECTOR(3 downto 0);
 	signal BCD1_P : STD_LOGIC_VECTOR(3 downto 0);
 	signal BCD2_P : STD_LOGIC_VECTOR(3 downto 0);
 	signal BCD3_P : STD_LOGIC_VECTOR(3 downto 0);
 	
+	signal BCD0_cc : STD_LOGIC_VECTOR(3 downto 0);
+	signal BCD1_cc : STD_LOGIC_VECTOR(3 downto 0);
+	signal BCD2_cc : STD_LOGIC_VECTOR(3 downto 0);
+	signal BCD3_cc : STD_LOGIC_VECTOR(3 downto 0);
+	
+	signal DP_H3 : std_logic;
+	signal DP_H2 : std_logic;
+	
+	signal TEMP_MILIVOLTIOS : STD_LOGIC_VECTOR(12 downto 0);
+	signal TEMP_CENTIGRADOS : signed(15 downto 0);
+	signal TEMP_CENTIGRADOS_ABSOLUTA : std_LOGIC_VECTOR(15 downto 0);
+	signal temperatura_negativa : std_logic := '0';				-- '0' positiva; '1' negativa
+	
+	signal CH1_PROMEDIADO: std_LOGIC_VECTOR(11 downto 0);
 	signal PULSE_4HZ : std_logic := '0';
 	
 	begin
@@ -76,20 +86,34 @@ architecture Behavioral of ADC_TOP is
 		CONVERSOR_A_mV :	entity work.ADC_A_mV
 								port map(
 											cuentas_ADC => CH1_PROMEDIADO,
-											conversion_mv => MILIVOLTIOS
+											conversion_mv => TEMP_MILIVOLTIOS
 											);
 											
-		BIN2BCD0 : entity work.BIN2BCD_9999 generic map(13) port map(MILIVOLTIOS, BCD0, BCD1, BCD2, BCD3);
+		CONVERSOR_A_cC :	entity work.mV_A_TEMP
+								port map(
+											mv => TEMP_MILIVOLTIOS,
+											conversion_centesimas_gradoC => TEMP_CENTIGRADOS);
+											
+		BIN2BCD_MILIVOLTIOS : entity work.BIN2BCD_9999 generic map(n_bits=>13) port map(TEMP_MILIVOLTIOS, BCD0_mv, BCD1_mv, BCD2_mv, BCD3_mv);
+		BIN2BCD_CENTIGRADOS : entity work.BIN2BCD_9999 generic map(n_bits=>16) port map(TEMP_CENTIGRADOS_ABSOLUTA, BCD0_cc, BCD1_cc, BCD2_cc, BCD3_cc);
+
 		
 		D0 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD0_P, D7SEG => HEX0, DP => '0');
 		D1 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD1_P, D7SEG => HEX1, DP => '0');
-		D2 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD2_P, D7SEG => HEX2, DP => '0');
-		D3 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD3_P, D7SEG => HEX3, DP => '1');
-		D4 : entity work.DISPLAY port map (BIN => "0000", D7SEG => HEX4, OFF => '1');
+		D2 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD2_P, D7SEG => HEX2, DP => DP_H2);
+		D3 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD3_P, D7SEG => HEX3, DP => DP_H3);
+
 		D5 : entity work.DISPLAY port map (BIN => "0000", D7SEG => HEX5, OFF => '1');
 		
-		-- < mapeo de señales combinacionales > --
+		-- < logica combinacional; asignaciones directas > --
+		temperatura_negativa <= TEMP_CENTIGRADOS(15);								-- el ultimo bit es el de signo
+
+		TEMP_CENTIGRADOS_ABSOLUTA <= std_LOGIC_VECTOR(abs(TEMP_CENTIGRADOS));
 		
+		DP_H3 <= '1' when SW(0) = '1' else '0'; -- Muestra X.XXX (Voltios)
+		DP_H2 <= '1' when SW(0) = '0' else '0'; -- Muestra XX.XX (Grados)
+		
+		HEX4 <= "10111111" when (SW(0) = '0' and temperatura_negativa = '1') else "11111111";
 		
 		-- procesos --
 		process(ADC_CLK)
@@ -100,10 +124,19 @@ architecture Behavioral of ADC_TOP is
 					
 				if PULSE_4HZ = '1' then
 				
-					BCD0_P <= BCD0;
-					BCD1_P <= BCD1;
-					BCD2_P <= BCD2;
-					BCD3_P <= BCD3;
+					if SW(0) = '1' then
+							-- MODO MILIVOLTIOS
+							BCD0_P <= BCD0_mv;
+							BCD1_P <= BCD1_mv;
+							BCD2_P <= BCD2_mv;
+							BCD3_P <= BCD3_mv;
+						else
+							-- MODO TEMPERATURA
+							BCD0_P <= BCD0_cc;
+							BCD1_P <= BCD1_cc;
+							BCD2_P <= BCD2_cc;
+							BCD3_P <= BCD3_cc;
+						end if;
 					
 				end if;
 				
