@@ -20,6 +20,10 @@ end entity;
 
 architecture Behavioral of BIN2BCD_9999 is
 
+    ------------------------------------------------------------------
+    -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
+    ------------------------------------------------------------------
+
     signal entero: integer range 0 to 2**n_bits - 1;
     signal unidades: integer range 0 to 9;
     signal decenas: integer range 0 to 9;
@@ -27,6 +31,15 @@ architecture Behavioral of BIN2BCD_9999 is
     signal millares: integer range 0 to 9;
 
 begin
+    
+    ------------------------------------------------------------------
+    -- MAPEO DE ENTIDADES INTERNAS
+    ------------------------------------------------------------------
+    
+    ------------------------------------------------------------------
+    -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
+    ------------------------------------------------------------------
+    
     entero <= TO_INTEGER(unsigned(BIN));
 
     unidades  <= entero mod 10;
