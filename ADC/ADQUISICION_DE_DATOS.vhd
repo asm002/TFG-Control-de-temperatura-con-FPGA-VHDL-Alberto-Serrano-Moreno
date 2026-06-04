@@ -2,25 +2,23 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-entity ADC_TOP is
+entity ADQUISICION_DE_DATOS is
     PORT(
-            MAX10_CLK1_50 : in STD_LOGIC;
-            ADC_CLK_10 : in STD_LOGIC;
-            SW : in STD_LOGIC_VECTOR (9 downto 0);
-            KEY : in STD_LOGIC_VECTOR (1 downto 0);
-            LEDR : out STD_LOGIC_VECTOR (9 downto 0) := (others=>'0');          
-            ARDUINO_RESET_N : in STD_LOGIC;
-            ARDUINO_IO : inout STD_LOGIC_VECTOR (15 downto 0);
-            HEX0 : out STD_LOGIC_VECTOR (7 downto 0);
-            HEX1 : out STD_LOGIC_VECTOR (7 downto 0);
-            HEX2 : out STD_LOGIC_VECTOR (7 downto 0);
-            HEX3 : out STD_LOGIC_VECTOR (7 downto 0);
-            HEX4 : out STD_LOGIC_VECTOR (7 downto 0);
-            HEX5 : out STD_LOGIC_VECTOR (7 downto 0)
+            clk_50 : in std_logic;
+            switches : in std_logic_vector (9 downto 0);         
+            reset : in std_logic;
+            disp0 : out std_logic_vector (7 downto 0);
+            disp1 : out std_logic_vector (7 downto 0);
+            disp2 : out std_logic_vector (7 downto 0);
+            disp3 : out std_logic_vector (7 downto 0);
+            disp4 : out std_logic_vector (7 downto 0);
+            disp5 : out std_logic_vector (7 downto 0);
+            temp_milivoltios : out std_logic_vector(12 downto 0);
+            temp_centesimas_centigrado : out signed(15 downto 0)
     );
 END entity;
 
-architecture Behavioral of ADC_TOP is
+architecture Behavioral of ADQUISICION_DE_DATOS is
 
     ------------------------------------------------------------------
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
@@ -28,33 +26,33 @@ architecture Behavioral of ADC_TOP is
     
     signal ADC_CLK : std_logic;
     
-    signal CH1: std_LOGIC_VECTOR(11 downto 0);
-    signal ADC_VALID: std_LOGIC;
+    signal CH1: std_logic_vector(11 downto 0);
+    signal ADC_VALID: std_logic;
     
-    signal BCD0_mv : STD_LOGIC_VECTOR(3 downto 0);
-    signal BCD1_mv : STD_LOGIC_VECTOR(3 downto 0);
-    signal BCD2_mv : STD_LOGIC_VECTOR(3 downto 0);
-    signal BCD3_mv : STD_LOGIC_VECTOR(3 downto 0);
+    signal BCD0_mv : std_logic_vector(3 downto 0);
+    signal BCD1_mv : std_logic_vector(3 downto 0);
+    signal BCD2_mv : std_logic_vector(3 downto 0);
+    signal BCD3_mv : std_logic_vector(3 downto 0);
     
-    signal BCD0_P : STD_LOGIC_VECTOR(3 downto 0);
-    signal BCD1_P : STD_LOGIC_VECTOR(3 downto 0);
-    signal BCD2_P : STD_LOGIC_VECTOR(3 downto 0);
-    signal BCD3_P : STD_LOGIC_VECTOR(3 downto 0);
+    signal BCD0_P : std_logic_vector(3 downto 0);
+    signal BCD1_P : std_logic_vector(3 downto 0);
+    signal BCD2_P : std_logic_vector(3 downto 0);
+    signal BCD3_P : std_logic_vector(3 downto 0);
     
-    signal BCD0_cc : STD_LOGIC_VECTOR(3 downto 0);
-    signal BCD1_cc : STD_LOGIC_VECTOR(3 downto 0);
-    signal BCD2_cc : STD_LOGIC_VECTOR(3 downto 0);
-    signal BCD3_cc : STD_LOGIC_VECTOR(3 downto 0);
+    signal BCD0_cc : std_logic_vector(3 downto 0);
+    signal BCD1_cc : std_logic_vector(3 downto 0);
+    signal BCD2_cc : std_logic_vector(3 downto 0);
+    signal BCD3_cc : std_logic_vector(3 downto 0);
     
     signal DP_H1 : std_logic;
-    signal D7SEG_H3 : STD_LOGIC_VECTOR (7 downto 0);
+    signal D7SEG_H3 : std_logic_vector (7 downto 0);
     
-    signal TEMP_MILIVOLTIOS : STD_LOGIC_VECTOR(12 downto 0);
-    signal TEMP_CENTIGRADOS : signed(15 downto 0);
-    signal TEMP_CENTIGRADOS_ABSOLUTA : std_LOGIC_VECTOR(15 downto 0);
+    signal s_temp_milivoltios : std_logic_vector(12 downto 0);
+    signal s_temp_centesimas_centigrado : signed(15 downto 0);
+    signal temp_centesimas_absoluta : std_logic_vector(15 downto 0);
     signal temperatura_negativa : std_logic := '0';                                 -- '0' positiva; '1' negativa
     
-    signal CH1_PROMEDIADO: std_LOGIC_VECTOR(11 downto 0);
+    signal CH1_PROMEDIADO: std_logic_vector(11 downto 0);
     signal PULSE_4HZ : std_logic := '0';
     
     begin
@@ -64,9 +62,9 @@ architecture Behavioral of ADC_TOP is
         
         ADC_DRIVER0 : entity work.ADC_DRIVER
             port map(
-                        clk_in => MAX10_CLK1_50,
+                        clk_in => clk_50,
                         clk_out => ADC_CLK,
-                        reset => ARDUINO_RESET_N,
+                        reset => reset,
                         ch1_data => CH1,
                         adc_valid => ADC_VALID
                         );
@@ -92,43 +90,47 @@ architecture Behavioral of ADC_TOP is
         CONVERSOR_A_mV :    entity work.ADC_A_mV
                                 port map(
                                             cuentas_ADC => CH1_PROMEDIADO,
-                                            conversion_mv => TEMP_MILIVOLTIOS
+                                            conversion_mv => s_temp_milivoltios
                                             );
                                             
         CONVERSOR_A_cC :    entity work.mV_A_TEMP
                                 port map(
-                                            mv => TEMP_MILIVOLTIOS,
-                                            conversion_centesimas_gradoC => TEMP_CENTIGRADOS);
+                                            mv => s_temp_milivoltios,
+                                            conversion_centesimas_gradoC => s_temp_centesimas_centigrado);
                                             
-        BIN2BCD_MILIVOLTIOS : entity work.BIN2BCD_9999 generic map(n_bits=>13) port map(TEMP_MILIVOLTIOS, BCD0_mv, BCD1_mv, BCD2_mv, BCD3_mv);
-        BIN2BCD_CENTIGRADOS : entity work.BIN2BCD_9999 generic map(n_bits=>16) port map(TEMP_CENTIGRADOS_ABSOLUTA, BCD0_cc, BCD1_cc, BCD2_cc, BCD3_cc);
+        BIN2BCD_MILIVOLTIOS : entity work.BIN2BCD_9999 generic map(n_bits=>13) port map(s_temp_milivoltios, BCD0_mv, BCD1_mv, BCD2_mv, BCD3_mv);
+        BIN2BCD_CENTIGRADOS : entity work.BIN2BCD_9999 generic map(n_bits=>16) port map(temp_centesimas_absoluta, BCD0_cc, BCD1_cc, BCD2_cc, BCD3_cc);
 
         
-        D0 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD0_P, D7SEG => HEX0, DP => '0');
-        D1 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD1_P, D7SEG => HEX1, DP => DP_H1);
-        D2 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD2_P, D7SEG => HEX2, DP => '0');
+        D0 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD0_P, D7SEG => disp0, DP => '0');
+        D1 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD1_P, D7SEG => disp1, DP => DP_H1);
+        D2 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD2_P, D7SEG => disp2, DP => '0');
         D3 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD3_P, D7SEG => D7SEG_H3, DP => '1');
         
-        D4 : entity work.DISPLAY generic map(BCD => true) port map (BIN => "0000", D7SEG => HEX4, OFF => '1');
+        D4 : entity work.DISPLAY generic map(BCD => true) port map (BIN => "0000", D7SEG => disp4, OFF => '1');
 
         
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
         
-        TEMP_CENTIGRADOS_ABSOLUTA <= std_LOGIC_VECTOR(abs(TEMP_CENTIGRADOS));
+        temp_centesimas_absoluta <= std_logic_vector(abs(s_temp_centesimas_centigrado));
         
-        temperatura_negativa <= TEMP_CENTIGRADOS(15);                                   -- el ultimo bit es el de signo
+        temperatura_negativa <= s_temp_centesimas_centigrado(15);                                   -- el ultimo bit es el de signo
         
-        HEX5 <= "01000110" when SW(0) = '0' else "01000001";
+        disp5 <= "01000110" when switches(0) = '0' else "01000001";
         
-        with std_logic_vector'(SW(0) & temperatura_negativa) select HEX3 <= 
+        with std_logic_vector'(switches(0) & temperatura_negativa) select disp3 <= 
                     "10111111" when "01",                                                       -- modo temperatura y es negativa -> mostrar signo menos
                     "11111111" when "00",                                                       -- modo temperatura y es positiva -> no signo menos, apagar display
                     D7SEG_H3   when others;                                                     -- modo tension -> dejar pasar los millares de milivoltio
         
         
-        DP_H1 <= '1' when SW(0) = '0' else '0';                                             -- punto decimal de HEX1 ; para mostrar XX.X (grados)       
+        DP_H1 <= '1' when switches(0) = '0' else '0';                                             -- punto decimal de disp1 ; para mostrar XX.X (grados)       
+        
+        -- asignacion de salidas del modulo
+        temp_milivoltios <= s_temp_milivoltios;
+        temp_centesimas_centigrado <= s_temp_centesimas_centigrado;
         
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
@@ -144,7 +146,7 @@ architecture Behavioral of ADC_TOP is
                     
                 if PULSE_4HZ = '1' then
                 
-                    if SW(0) = '1' then
+                    if switches(0) = '1' then
                             -- MODO MILIVOLTIOS
                             BCD0_P <= BCD0_mv;
                             BCD1_P <= BCD1_mv;
