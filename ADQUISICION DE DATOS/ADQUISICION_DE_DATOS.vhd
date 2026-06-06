@@ -1,18 +1,26 @@
+-- Este modulo resuelve la adquisicion de datos y es modular: no conecta directamente
+-- con el hardware externo.
+-- Este modulo es el que se conectará con el resto de áreas del proyecto.
+-- TOP_LEVEL_ENTITY_ADC hace uso de este módulo para conectar con
+-- el hardware de la tarjeta y probarlo.
+
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 entity ADQUISICION_DE_DATOS is
     PORT(
-            clk_50 : in std_logic;
-            switches : in std_logic_vector (9 downto 0);         
-            reset : in std_logic;
+            clk_50 : in std_logic;  -- conexion al reloj de 50 Mhz
+            switches : in std_logic_vector (9 downto 0);  -- conexiones a los SW()       
+            reset : in std_logic;   -- conexion a arduino reset
+            -- conexiones a los displays (HEX)
             disp0 : out std_logic_vector (7 downto 0);
             disp1 : out std_logic_vector (7 downto 0);
             disp2 : out std_logic_vector (7 downto 0);
             disp3 : out std_logic_vector (7 downto 0);
             disp4 : out std_logic_vector (7 downto 0);
             disp5 : out std_logic_vector (7 downto 0);
+            -- salidas de datos para otros modulos
             temp_milivoltios : out std_logic_vector(12 downto 0);
             temp_centesimas_centigrado : out signed(15 downto 0)
     );
