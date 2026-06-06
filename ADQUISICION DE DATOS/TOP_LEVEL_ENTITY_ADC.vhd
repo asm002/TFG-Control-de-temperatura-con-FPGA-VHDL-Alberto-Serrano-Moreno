@@ -1,3 +1,5 @@
+-- Este modulo tan solo instancia ADQUISICION_DE_DATOS para conectarlo con los periféricos de la tarjeta y así probar dicho modulo.
+
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
