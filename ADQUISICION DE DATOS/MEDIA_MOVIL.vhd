@@ -23,7 +23,7 @@ entity MEDIA_MOVIL is
         );
     PORT(
         CLK : in std_logic; -- reloj de entrada
-        RESET: in std_logic := '0'; -- reset
+        RESET: in std_logic := '0'; -- reset activo a nivel alto
         DATO_LISTO: in std_logic := '0';    -- se debe recibir un pulso cada vez que el 
                                             -- dato se haya actualizado, para registrar 
                                             -- una nueva muestra
@@ -68,6 +68,7 @@ architecture Behavioral of MEDIA_MOVIL is
                         )
             port map(
                      CLK => CLK,
+                     RESET => RESET,
                      PULSE => PULSE_FREC_MUESTREO_HZ
                     );
         

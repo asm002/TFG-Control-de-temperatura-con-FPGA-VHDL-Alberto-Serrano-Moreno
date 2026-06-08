@@ -12,7 +12,7 @@ entity ADQUISICION_DE_DATOS is
     PORT(
             clk_50 : in std_logic;  -- conexion al reloj de 50 Mhz
             switches : in std_logic_vector (9 downto 0);  -- conexiones a los SW()       
-            reset : in std_logic;   -- conexion a arduino reset
+            reset_n : in std_logic;   -- conexion a arduino_reset_n (mucho cuidado, debe ser un reset de logica inversa, activo a nivel bajo)
             -- conexiones a los displays (HEX)
             disp0 : out std_logic_vector (7 downto 0);
             disp1 : out std_logic_vector (7 downto 0);
@@ -72,7 +72,7 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
             port map(
                         clk_in => clk_50,
                         clk_out => ADC_CLK,
-                        reset => reset,
+                        reset_n => reset_n,
                         ch1_data => CH1,
                         adc_valid => ADC_VALID
                         );
@@ -84,6 +84,7 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
                                             CLK_FREC => 10E6)
                             port map(
                                         CLK => ADC_CLK,
+                                        RESET => not reset_n, 
                                         DATO_LISTO => ADC_VALID,
                                         DATO => CH1,
                                         DATO_PROMEDIADO => CH1_PROMEDIADO);
@@ -92,6 +93,7 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
                                         generic map(CLK_FREC => 10E6, PULSE_FREC => 4)
                                         port map(
                                                 CLK => ADC_CLK,
+                                                RESET => not reset_n,
                                                 PULSE => PULSE_4HZ
                                                 );
                                                 

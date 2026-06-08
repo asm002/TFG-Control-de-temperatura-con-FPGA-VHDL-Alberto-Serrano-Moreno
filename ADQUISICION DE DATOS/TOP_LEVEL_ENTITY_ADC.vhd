@@ -38,7 +38,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
             port map(
                         clk_50 => MAX10_CLK1_50,
                         switches => SW,       
-                        reset => ARDUINO_RESET_N,
+                        reset_n => ARDUINO_RESET_N,
                         disp0 => HEX0,
                         disp1 => HEX1,
                         disp2 => HEX2,

@@ -12,7 +12,7 @@ entity GENERADOR_PULSOS is
     );
     PORT(
         CLK: in std_logic := '0';
-        RESET: in std_logic := '0';
+        RESET: in std_logic := '0';     -- activo a nivel alto
         PULSE: out std_logic := '0'
     );
 END entity;

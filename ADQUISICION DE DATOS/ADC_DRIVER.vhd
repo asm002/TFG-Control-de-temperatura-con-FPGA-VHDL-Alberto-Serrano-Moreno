@@ -5,7 +5,7 @@ use IEEE.numeric_std.all;
 entity ADC_DRIVER is
     port(
          clk_in  : in  std_logic;   -- 50 MHz de la placa
-         reset   : in  std_logic;
+         reset_n   : in  std_logic; -- reset activo a nivel bajo
 
          clk_out : out std_logic;   -- reloj interno de lógica (PLL_c0)
 
@@ -90,7 +90,7 @@ architecture Behavioral of ADC_DRIVER is
         ------------------------------------------------------------------
         PLL0 : PLL_IP
             port map (
-                        areset  =>  not reset,
+                        areset  =>  not reset_n,
                         inclk0  => clk_in,
                         c0          => PLL_c0,
                         c1          =>  PLL_c1,
@@ -107,7 +107,7 @@ architecture Behavioral of ADC_DRIVER is
                         command_startofpacket  => command_startofpacket,
                         command_endofpacket    => command_endofpacket,
                         command_ready          => command_ready,
-                        reset_sink_reset_n     => reset,
+                        reset_sink_reset_n     => reset_n,
                         response_valid         => response_valid,
                         response_channel       => response_channel,
                         response_data          => response_data,
