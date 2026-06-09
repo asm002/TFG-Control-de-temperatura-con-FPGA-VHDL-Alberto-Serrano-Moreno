@@ -3,12 +3,12 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 entity PLANTILLA is
-    GENERIC(
+    generic(
         );
-    PORT(
+    port(
             
     );
-END entity;
+end entity;
 
 architecture Behavioral of PLANTILLA is
     ------------------------------------------------------------------
@@ -30,13 +30,13 @@ architecture Behavioral of PLANTILLA is
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
         ------------------------------------------------------------------
-        process(CLK)
+        process(clk)
         ------------------------------------------------------------------
         -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
         ------------------------------------------------------------------
             
             begin           
-                if rising_edge(CLK) then
+                if rising_edge(clk) then
                 
                 end if;
         end process;
