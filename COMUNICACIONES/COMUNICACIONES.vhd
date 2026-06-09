@@ -35,6 +35,12 @@ architecture Behavioral of COMUNICACIONES is
     signal s_ready, s_start, s_done : std_logic := '0';
     signal s_data : std_logic_vector(7 downto 0) := (others => '0');
     
+    constant MSG_N_BYTES : integer := 11; -- CUIDADO: debe coincidir con el tamaño de indice
+                                       -- dentro de MENSAJE_TX
+                                       -- NO se modifica automaticamente
+    signal msg_byte_indice : integer range 0 to MSG_N_BYTES-1;
+    signal msg_byte : std_logic_vector(7 downto 0);
+    
     begin
         ------------------------------------------------------------------
         -- MAPEO DE ENTIDADES INTERNAS
@@ -73,7 +79,21 @@ architecture Behavioral of COMUNICACIONES is
                 tx_done => s_done   
             );
             
+        MENSAJE_TX0 : entity work.MENSAJE_TX
+            port map(
+                indice => msg_byte_indice,
+                byte_out => msg_byte,
+                
+                bit_signo_temp => '0', 
+                bcd_decenas_temp => x"9",
+                bcd_unidades_temp => x"7",
+                bcd_decimas_temp => x"8"
+            );
+            
         SECUENCIADOR0 : entity work.SECUENCIADOR
+            generic map(
+                MSG_N_BYTES => MSG_N_BYTES
+            )
             port map(
                 clk => clk,
                 rst => not reset_n,
@@ -81,7 +101,10 @@ architecture Behavioral of COMUNICACIONES is
                 tx_ready => s_ready,
                 tx_done => s_done,
                 tx_start => s_start,
-                tx_data => s_data
+                tx_data => s_data,
+                
+                msg_byte_indice => msg_byte_indice,
+                msg_byte => msg_byte
                 );
         
         ------------------------------------------------------------------

@@ -3,15 +3,21 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 entity SECUENCIADOR is
+    generic(
+        MSG_N_BYTES : integer := 11
+        );
     port(
         clk : in std_logic;
         rst : in std_logic;
         mandar_mensaje : in std_logic;  -- pulso que ordena enviar un mensaje completo
-                                        -- formado por varios bytes y acabado en /n (CR)
+                                        -- formado por varios bytes y acabado en /n (LF)
         tx_ready : in std_logic;
         tx_done : in std_logic;
         tx_start : out std_logic;
-        tx_data : out std_logic_vector(7 downto 0)
+        tx_data : out std_logic_vector(7 downto 0);
+        
+        msg_byte_indice : out integer range 0 to MSG_N_BYTES-1;
+        msg_byte: in std_logic_vector(7 downto 0)
         
     );
 end entity;
@@ -21,11 +27,7 @@ architecture Behavioral of SECUENCIADOR is
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
     
-    -- generamos un array para guardar los bytes que componen el mensaje
-    type mensaje is array (0 to 1) of std_logic_vector(7 downto 0);
-    constant MSG : mensaje := (x"41", x"0A");
-    
-    signal indice : integer range 0 to 1 := 0;
+    signal indice : integer range 0 to MSG_N_BYTES-1 := 0;
     
     type estados is (ESPERA, ENVIO, ESPERAR_BYTE);
     signal estado : estados := ESPERA;
@@ -39,7 +41,7 @@ architecture Behavioral of SECUENCIADOR is
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
-        
+        msg_byte_indice <= indice;
         
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
@@ -70,14 +72,14 @@ architecture Behavioral of SECUENCIADOR is
                             when ENVIO =>
                                 if tx_ready = '1' then
                                     tx_start <= '1';
-                                    tx_data <= MSG(indice);
+                                    tx_data <= msg_byte;
                                     estado <= ESPERAR_BYTE;
                                         
                                 end if;
                             
                             when ESPERAR_BYTE =>
                                 if tx_done = '1' then
-                                    if indice = 1 then
+                                    if indice = MSG_N_BYTES-1 then
                                         estado <= ESPERA;
                                         
                                     else
