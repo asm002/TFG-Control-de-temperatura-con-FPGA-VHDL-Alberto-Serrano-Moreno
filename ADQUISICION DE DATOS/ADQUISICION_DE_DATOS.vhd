@@ -23,7 +23,13 @@ entity ADQUISICION_DE_DATOS is
             -- salidas de datos para otros modulos
             clk_adc : out std_logic;
             temp_milivoltios : out std_logic_vector(12 downto 0);
-            temp_centesimas_centigrado : out signed(15 downto 0)
+            temp_centesimas_centigrado : out signed(15 downto 0);
+            
+            bit_signo_temp : out std_logic;
+            bcd_decenas_temp : out std_logic_vector(3 downto 0);
+            bcd_unidades_temp : out std_logic_vector(3 downto 0);
+            bcd_decimas_temp : out std_logic_vector(3 downto 0)
+            
     );
 END entity;
 
@@ -142,7 +148,15 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
         -- asignacion de salidas del modulo
         temp_milivoltios <= s_temp_milivoltios;
         temp_centesimas_centigrado <= s_temp_centesimas_centigrado;
+        
         clk_adc <= ADC_CLK;
+        
+        bit_signo_temp <= temperatura_negativa;
+        bcd_decenas_temp <= BCD3_cc;
+        bcd_unidades_temp <= BCD2_cc;
+        bcd_decimas_temp <= BCD1_cc;
+        -- BCD0 son las centesimas, que vamos a ignorar porque
+        -- no son signficativas (resolucion termica de 0.1C)
         
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
