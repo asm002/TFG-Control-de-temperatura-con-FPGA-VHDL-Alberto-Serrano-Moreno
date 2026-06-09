@@ -4,14 +4,14 @@ use IEEE.numeric_std.all;
 
 entity UART_TX is
     port(
-        clk         : in  std_logic;                    -- Reloj del sistema (10 MHz)
-        rst         : in  std_logic;                    -- Reset síncrono
-        baud_ce     : in  std_logic;                    -- Pulso de habilitación (1 de cada 87 ciclos)
-        tx_start    : in  std_logic;                    -- Orden de empezar a transmitir (1 ciclo)
-        tx_data     : in  std_logic_vector(7 downto 0); -- El byte que queremos mandar
-        tx_out      : out std_logic;                    -- Pin físico de salida TX
-        tx_ready    : out std_logic;                    -- '1' si está libre, '0' si está ocupado
-        tx_done     : out std_logic                     -- Pulso de fin de transmisión (1 ciclo)
+        clk         : in  std_logic;                    
+        rst         : in  std_logic;                    
+        baud_ce     : in  std_logic;    -- pulso de habilitación para cumplir los baudios
+        tx_start    : in  std_logic;    -- orden de empezar a transmitir (pulso)
+        tx_data     : in  std_logic_vector(7 downto 0);
+        tx_out      : out std_logic;    -- bit serie de salida
+        tx_ready    : out std_logic;    -- '1' si está libre, '0' si está ocupado
+        tx_done     : out std_logic     -- pulso de fin de transmisión (1 byte enviado)
     );
 END entity;
 
@@ -19,12 +19,12 @@ architecture Behavioral of UART_TX is
     ------------------------------------------------------------------
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
-    type t_estados is (ST_IDLE, ST_START, ST_DATA, ST_STOP);
-    signal estado : t_estados := ST_IDLE;
+    type estados is (REPOSO, BIT_START, DATOS, BIT_STOP);
+    signal estado : estados := REPOSO;
 
-    signal r_tx_reg   : std_logic_vector(7 downto 0) := (others => '0');
-    signal r_bit_idx  : integer range 0 to 7 := 0;
-    signal r_tx_out   : std_logic := '1';
+    signal registro_datos   : std_logic_vector(7 downto 0) := (others => '0');
+    signal indice_bit  : integer range 0 to 7 := 0;
+    signal salida   : std_logic := '1';
     
     
     begin
@@ -36,8 +36,8 @@ architecture Behavioral of UART_TX is
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
-        tx_out   <= r_tx_out;
-        tx_ready <= '1' when (estado = ST_IDLE) else '0';
+        tx_out   <= salida;
+        tx_ready <= '1' when (estado = REPOSO) else '0';
         
         
         ------------------------------------------------------------------
@@ -52,50 +52,50 @@ architecture Behavioral of UART_TX is
         begin
         if rising_edge(clk) then
             if rst = '1' then
-                estado    <= ST_IDLE;
-                r_tx_out  <= '1';
-                r_bit_idx <= 0;
+                estado    <= REPOSO;
+                salida  <= '1';
+                indice_bit <= 0;
                 tx_done   <= '0';
             else
                 tx_done <= '0'; -- El pulso de "hecho" dura solo un ciclo de reloj
 
                 case estado is
                     
-                    when ST_IDLE =>
-                        r_tx_out <= '1'; -- Línea en alto
+                    when REPOSO =>
+                        salida <= '1'; -- Línea en alto
                         if tx_start = '1' then
-                            r_tx_reg <= tx_data; -- Capturamos el byte inmediatamente
-                            estado   <= ST_START;
+                            registro_datos <= tx_data; -- Capturamos el byte inmediatamente
+                            estado   <= BIT_START;
                         end if;
 
-                    when ST_START =>
+                    when BIT_START =>
                         -- Esperamos al pulso del generador de baudios para cambiar la línea
                         if baud_ce = '1' then
-                            r_tx_out  <= '0'; -- Bit de Start (0)
-                            r_bit_idx <= 0;
-                            estado    <= ST_DATA;
+                            salida  <= '0'; -- Bit de Start (0)
+                            indice_bit <= 0;
+                            estado    <= DATOS;
                         end if;
 
-                    when ST_DATA =>
+                    when DATOS =>
                         if baud_ce = '1' then
-                            r_tx_out <= r_tx_reg(r_bit_idx); -- Mandamos el bit actual (LSB primero)
+                            salida <= registro_datos(indice_bit); -- Mandamos el bit actual (LSB primero)
                             
-                            if r_bit_idx = 7 then
-                                estado <= ST_STOP;
+                            if indice_bit = 7 then
+                                estado <= BIT_STOP;
                             else
-                                r_bit_idx <= r_bit_idx + 1;
+                                indice_bit <= indice_bit + 1;
                             end if;
                         end if;
 
-                    when ST_STOP =>
+                    when BIT_STOP =>
                         if baud_ce = '1' then
-                            r_tx_out <= '1'; -- Bit de Stop (1)
+                            salida <= '1'; -- Bit de Stop (1)
                             tx_done  <= '1'; -- Avisamos de que el byte se ha enviado
-                            estado   <= ST_IDLE;
+                            estado   <= REPOSO;
                         end if;
 
                     when others =>
-                        estado <= ST_IDLE;
+                        estado <= REPOSO;
                 end case;
             end if;
         end if;

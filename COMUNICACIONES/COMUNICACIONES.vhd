@@ -11,12 +11,13 @@ use IEEE.numeric_std.all;
 entity COMUNICACIONES is
     generic(
         CLK_FREQ : integer := 50E6;
-        BAUD_FREQ : integer := 115200
+        BAUD_FREQ : integer := 115200;
+        MSG_FREQ : integer := 10    -- 100 ms -> 10 hz
     );
     PORT(
         clk : in std_logic;  -- conexion al reloj de 50 Mhz 
-                                -- (OJO: EN EL PROYECTO FINAL SERIA 
-                                -- MEJOR USAR EL RELOJ DEL ADC DE 10MHZ)
+                             -- (OJO: EN EL PROYECTO FINAL SERIA 
+                             -- MEJOR USAR EL RELOJ DEL ADC DE 10MHZ)
         switches : in std_logic_vector (9 downto 0);  -- conexiones a los SW()       
         reset_n : in std_logic := '0';   -- conexion a arduino reset 
         out_pin : out std_logic;
@@ -28,7 +29,11 @@ architecture Behavioral of COMUNICACIONES is
     ------------------------------------------------------------------
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
-    signal baud_clock_enable : std_logic;
+    signal baud_clock_enable : std_logic := '0';
+    signal msg_pulse : std_logic := '0';
+    
+    signal s_ready, s_start, s_done : std_logic := '0';
+    signal s_data : std_logic_vector(7 downto 0) := (others => '0');
     
     begin
         ------------------------------------------------------------------
@@ -45,17 +50,39 @@ architecture Behavioral of COMUNICACIONES is
                 PULSE => baud_clock_enable
             );
         
+        FREC_MENSAJE : entity work.GENERADOR_PULSOS
+            generic map(
+                CLK_FREC => CLK_FREQ,
+                PULSE_FREC => MSG_FREQ
+                )
+            port map(
+                CLK => clk,
+                RESET => not reset_n,
+                PULSE => msg_pulse
+                );
+        
         UART_TX0 : entity work.UART_TX
             port map(
                 clk => clk,       
                 rst => not reset_n,
                 baud_ce => baud_clock_enable,
-                tx_start => '1',   
-                tx_data => x"41",    
+                tx_start => s_start,   
+                tx_data => s_data,    
                 tx_out => out_pin,    
-                tx_ready => open,    
-                tx_done => open   
+                tx_ready => s_ready,    
+                tx_done => s_done   
             );
+            
+        SECUENCIADOR0 : entity work.SECUENCIADOR
+            port map(
+                clk => clk,
+                rst => not reset_n,
+                mandar_mensaje => msg_pulse,
+                tx_ready => s_ready,
+                tx_done => s_done,
+                tx_start => s_start,
+                tx_data => s_data
+                );
         
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
