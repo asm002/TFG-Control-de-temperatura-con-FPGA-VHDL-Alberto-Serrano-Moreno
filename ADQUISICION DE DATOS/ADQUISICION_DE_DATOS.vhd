@@ -21,6 +21,7 @@ entity ADQUISICION_DE_DATOS is
             disp4 : out std_logic_vector (7 downto 0);
             disp5 : out std_logic_vector (7 downto 0);
             -- salidas de datos para otros modulos
+            clk_adc : out std_logic;
             temp_milivoltios : out std_logic_vector(12 downto 0);
             temp_centesimas_centigrado : out signed(15 downto 0)
     );
@@ -141,6 +142,7 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
         -- asignacion de salidas del modulo
         temp_milivoltios <= s_temp_milivoltios;
         temp_centesimas_centigrado <= s_temp_centesimas_centigrado;
+        clk_adc <= ADC_CLK;
         
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
