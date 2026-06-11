@@ -31,7 +31,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
     
     signal clk_adc : std_logic; -- 25 MHz
     signal pll_locked : std_logic;
-    signal reset_global : std_logic;
+    signal reset_and_pll_n : std_logic;
     
     signal bit_signo_temp : std_logic;
     signal bcd_decenas_temp : std_logic_vector(3 downto 0);
@@ -51,7 +51,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
             port map(
                 clk => clk_adc,
                 switches => SW,
-                reset_n => reset_global,
+                reset_n => reset_and_pll_n,
                 out_pin => ARDUINO_IO(15),
                 in_pin => open,
                 
@@ -66,7 +66,9 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
             port map(
                 clk_50 => MAX10_CLK1_50,
                 switches => SW,       
-                reset_n => ARDUINO_RESET_N,
+                reset_n => ARDUINO_RESET_N, -- mucho cuidado, aqui solo reset de boton,
+                                            -- usar reset_and_pll_n crea un bucle
+                                            -- infinito y no funciona nada
                 
                 disp0 => HEX0,
                 disp1 => HEX1,
@@ -92,7 +94,8 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
-        reset_global <= ARDUINO_RESET_N and pll_locked;
+        reset_and_pll_n <= ARDUINO_RESET_N and pll_locked;  -- reset de boton y ademas condicionado a que el pll
+                                                            -- esté listo. Activo a nivel bajo
         
         
         
