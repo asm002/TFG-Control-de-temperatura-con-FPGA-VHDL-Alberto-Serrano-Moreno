@@ -8,6 +8,9 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+library work;
+use work.CONFIG_PROYECTO.all;
+
 entity ADQUISICION_DE_DATOS is
     PORT(
             clk_50 : in std_logic;  -- conexion al reloj de 50 Mhz
@@ -23,13 +26,8 @@ entity ADQUISICION_DE_DATOS is
             -- salidas de datos para otros modulos
             clk_adc : out std_logic;
             pll_locked_out : out std_logic; -- para mantener sistemas a reset hasta que el pll sea estable
-            temp_milivoltios : out std_logic_vector(12 downto 0);
-            temp_centesimas_centigrado : out signed(15 downto 0);
             
-            bit_signo_temp : out std_logic;
-            bcd_decenas_temp : out std_logic_vector(3 downto 0);
-            bcd_unidades_temp : out std_logic_vector(3 downto 0);
-            bcd_decimas_temp : out std_logic_vector(3 downto 0)
+            bus_temperatura : out t_bus_temperatura
             
     );
 END entity;
@@ -39,7 +37,6 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
     ------------------------------------------------------------------
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
-    constant PLL_C0_FREC : integer := 25E6;
     
     signal ADC_CLK : std_logic;
     
@@ -67,7 +64,7 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
     signal s_temp_milivoltios : std_logic_vector(12 downto 0);
     signal s_temp_centesimas_centigrado : signed(15 downto 0);
     signal temp_centesimas_absoluta : std_logic_vector(15 downto 0);
-    signal temperatura_negativa : std_logic := '0';                                 -- '0' positiva; '1' negativa
+    signal temperatura_negativa : std_logic := '0'; -- '0' positiva; '1' negativa
     
     signal CH1_PROMEDIADO: std_logic_vector(11 downto 0);
     signal PULSE_4HZ : std_logic := '0';
@@ -92,8 +89,8 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
                         
         MEDIA_MOVIL0 : entity work.MEDIA_MOVIL 
                             generic map(N_BITS_DATO => 12, 
-                                            N_BITS_MUESTRAS => 6,
-                                            VENTANA_TIEMPO_MS => 20,
+                                            N_BITS_MUESTRAS => BITS_MUESTRAS_MEDIA_MOVIL,
+                                            VENTANA_TIEMPO_MS => V_TIEMPO_MEDIA_MOVIL,
                                             CLK_FREC => PLL_C0_FREC)
                             port map(
                                         CLK => ADC_CLK,
@@ -152,16 +149,16 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
         DP_H1 <= '1' when switches(0) = '0' else '0';                                             -- punto decimal de disp1 ; para mostrar XX.X (grados)       
         
         -- asignacion de salidas del modulo
-        temp_milivoltios <= s_temp_milivoltios;
-        temp_centesimas_centigrado <= s_temp_centesimas_centigrado;
+        bus_temperatura.milivoltios <= s_temp_milivoltios;
+        bus_temperatura.centesimas_centigrado <= s_temp_centesimas_centigrado;
         
         clk_adc <= ADC_CLK;
         pll_locked_out <= pll_locked;
         
-        bit_signo_temp <= temperatura_negativa;
-        bcd_decenas_temp <= BCD3_cc;
-        bcd_unidades_temp <= BCD2_cc;
-        bcd_decimas_temp <= BCD1_cc;
+        bus_temperatura.bit_signo <= temperatura_negativa;
+        bus_temperatura.bcd_decenas <= BCD3_cc;
+        bus_temperatura.bcd_unidades <= BCD2_cc;
+        bus_temperatura.bcd_decimas <= BCD1_cc;
         -- BCD0 son las centesimas, que vamos a ignorar porque
         -- no son signficativas (resolucion termica de 0.1C)
         

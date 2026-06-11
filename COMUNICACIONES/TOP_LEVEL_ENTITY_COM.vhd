@@ -5,6 +5,9 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+library work;
+use work.CONFIG_PROYECTO.all;
+
 entity TOP_LEVEL_ENTITY_COM is
     PORT(
             MAX10_CLK1_50 : in std_logic;
@@ -27,16 +30,12 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
     ------------------------------------------------------------------
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
-    constant PLL_C0_FREC : integer := 25E6;
     
     signal clk_adc : std_logic; -- 25 MHz
     signal pll_locked : std_logic;
     signal reset_and_pll_n : std_logic;
     
-    signal bit_signo_temp : std_logic;
-    signal bcd_decenas_temp : std_logic_vector(3 downto 0);
-    signal bcd_unidades_temp : std_logic_vector(3 downto 0);
-    signal bcd_decimas_temp : std_logic_vector(3 downto 0);
+    signal bus_temperatura : t_bus_temperatura;
     
     begin
         ------------------------------------------------------------------
@@ -45,20 +44,17 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
         COMUNICACIONES : entity work.COMUNICACIONES
             generic map(
                 CLK_FREQ => PLL_C0_FREC,
-                BAUD_FREQ => 115200,
-                MSG_FREQ => 10  -- 100 ms -> 10 hz
+                BAUD_FREQ => BAUD_FREC,
+                MSG_FREQ => MSG_FREC  -- 100 ms -> 10 hz
                 )
             port map(
                 clk => clk_adc,
                 switches => SW,
                 reset_n => reset_and_pll_n,
-                out_pin => ARDUINO_IO(15),
+                out_pin => ARDUINO_IO(PIN_TX),
                 in_pin => open,
                 
-                bit_signo_temp => bit_signo_temp, 
-                bcd_decenas_temp => bcd_decenas_temp,
-                bcd_unidades_temp => bcd_unidades_temp,
-                bcd_decimas_temp => bcd_decimas_temp
+                bus_temperatura => bus_temperatura
                 
             );
             
@@ -79,15 +75,12 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
                 disp5 => HEX5,
                 clk_adc => clk_adc,
                 pll_locked_out => pll_locked,
-                temp_milivoltios => open,   -- "open" en vhdl sirve para indicar 
+                --temp_milivoltios => open,   -- "open" en vhdl sirve para indicar 
                                             -- de manera explicita que una señal
                                             -- no se conecta a nada
-                temp_centesimas_centigrado => open,
+                --temp_centesimas_centigrado => open,
                 
-                bit_signo_temp => bit_signo_temp,
-                bcd_decenas_temp => bcd_decenas_temp,
-                bcd_unidades_temp => bcd_unidades_temp,
-                bcd_decimas_temp => bcd_decimas_temp
+                bus_temperatura => bus_temperatura
         );
             
         

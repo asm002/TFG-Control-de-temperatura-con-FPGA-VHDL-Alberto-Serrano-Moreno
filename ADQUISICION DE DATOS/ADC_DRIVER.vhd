@@ -27,7 +27,6 @@ architecture Behavioral of ADC_DRIVER is
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
     
-    --signal reset : STD_LOGIC;
     signal command_valid : STD_LOGIC;
     signal command_channel : STD_LOGIC_VECTOR(4 DOWNTO 0) :="00001";
     signal command_startofpacket : STD_LOGIC;
@@ -39,11 +38,9 @@ architecture Behavioral of ADC_DRIVER is
     signal response_startofpacket : STD_LOGIC;
     signal response_endofpacket : STD_LOGIC;
     
-    constant PLL_C0_FREC : integer := 25E6;
     signal PLL_c0 : STD_LOGIC; -- RELOJ DE LA LOGICA PERIFERICA (25 MHZ)
     signal PLL_c1 : STD_LOGIC; -- RELOJ DEL ADC (10 MHZ)
     signal PLL_locked : STD_LOGIC;
-    
     
     -- En el manual se hace al contrario, se usa c0 para el adc y c1 para la logica. 
     -- No importa, siempre que el asistente del PLL (ip parameter editor)

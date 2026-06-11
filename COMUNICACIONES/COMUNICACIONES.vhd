@@ -8,6 +8,9 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+library work;
+use work.CONFIG_PROYECTO.all;
+
 entity COMUNICACIONES is
     generic(
         CLK_FREQ : integer := 50E6;
@@ -25,10 +28,7 @@ entity COMUNICACIONES is
         
         -- DATOS DE OTRAS AREAS --
         -- ADQUISICION:
-        bit_signo_temp : in std_logic; 
-        bcd_decenas_temp : in std_logic_vector(3 downto 0);
-        bcd_unidades_temp : in std_logic_vector(3 downto 0);
-        bcd_decimas_temp : in std_logic_vector(3 downto 0)
+        bus_temperatura : in t_bus_temperatura
         
     );
 END entity;
@@ -42,10 +42,7 @@ architecture Behavioral of COMUNICACIONES is
     
     signal s_ready, s_start, s_done : std_logic := '0';
     signal s_data : std_logic_vector(7 downto 0) := (others => '0');
-    
-    constant MSG_N_BYTES : integer := 11; -- CUIDADO: debe coincidir con el tamaño de indice
-                                       -- dentro de MENSAJE_TX
-                                       -- NO se modifica automaticamente
+                                       
     signal msg_byte_indice : integer range 0 to MSG_N_BYTES-1;
     signal msg_byte : std_logic_vector(7 downto 0);
     
@@ -92,10 +89,7 @@ architecture Behavioral of COMUNICACIONES is
                 indice => msg_byte_indice,
                 byte_out => msg_byte,
                 
-                bit_signo_temp => bit_signo_temp, 
-                bcd_decenas_temp => bcd_decenas_temp,
-                bcd_unidades_temp => bcd_unidades_temp,
-                bcd_decimas_temp => bcd_decimas_temp
+                bus_temperatura => bus_temperatura
             );
             
         SECUENCIADOR0 : entity work.SECUENCIADOR
