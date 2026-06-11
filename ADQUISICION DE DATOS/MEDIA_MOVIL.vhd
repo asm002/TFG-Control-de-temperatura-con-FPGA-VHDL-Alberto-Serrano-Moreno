@@ -17,9 +17,9 @@ use IEEE.numeric_std.all;
 entity MEDIA_MOVIL is
     GENERIC(
         N_BITS_DATO: integer := 12; -- tamaño del dato a promediar/filtrar
-        N_BITS_MUESTRAS : integer := 6; -- si se desean 64 muestras -> 6 bits (2^6=64)
+        N_BITS_MUESTRAS : integer := 10; -- si se desean 64 muestras -> 6 bits (2^6=64)
         VENTANA_TIEMPO_MS: integer := 20;   -- en milisegundos
-        CLK_FREC: integer := 10E6   -- frecuencia del reloj de entrada, en hercios
+        CLK_FREC: integer := 25E6   -- frecuencia del reloj de entrada, en hercios
         );
     PORT(
         CLK : in std_logic; -- reloj de entrada

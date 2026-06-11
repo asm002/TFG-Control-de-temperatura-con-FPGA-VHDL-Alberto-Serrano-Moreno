@@ -12,7 +12,7 @@ entity ADQUISICION_DE_DATOS is
     PORT(
             clk_50 : in std_logic;  -- conexion al reloj de 50 Mhz
             switches : in std_logic_vector (9 downto 0);  -- conexiones a los SW()       
-            reset_n : in std_logic;   -- conexion a arduino_reset_n (mucho cuidado, debe ser un reset de logica inversa, activo a nivel bajo)
+            reset_n : in std_logic;   -- conexion a reset (mucho cuidado, debe ser un reset de logica inversa, activo a nivel bajo)
             -- conexiones a los displays (HEX)
             disp0 : out std_logic_vector (7 downto 0);
             disp1 : out std_logic_vector (7 downto 0);
@@ -22,6 +22,7 @@ entity ADQUISICION_DE_DATOS is
             disp5 : out std_logic_vector (7 downto 0);
             -- salidas de datos para otros modulos
             clk_adc : out std_logic;
+            pll_locked_out : out std_logic; -- para mantener sistemas a reset hasta que el pll sea estable
             temp_milivoltios : out std_logic_vector(12 downto 0);
             temp_centesimas_centigrado : out signed(15 downto 0);
             
@@ -38,6 +39,7 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
     ------------------------------------------------------------------
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
+    constant PLL_C0_FREC : integer := 25E6;
     
     signal ADC_CLK : std_logic;
     
@@ -70,6 +72,8 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
     signal CH1_PROMEDIADO: std_logic_vector(11 downto 0);
     signal PULSE_4HZ : std_logic := '0';
     
+    signal pll_locked : std_logic;
+    
     begin
         ------------------------------------------------------------------
         -- MAPEO DE ENTIDADES INTERNAS
@@ -78,17 +82,19 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
         ADC_DRIVER0 : entity work.ADC_DRIVER
             port map(
                         clk_in => clk_50,
-                        clk_out => ADC_CLK,
+                        pll_c0_clk => ADC_CLK,
                         reset_n => reset_n,
                         ch1_data => CH1,
-                        adc_valid => ADC_VALID
+                        adc_valid => ADC_VALID,
+                        pll_locked_out => pll_locked
+                        
                         );
                         
         MEDIA_MOVIL0 : entity work.MEDIA_MOVIL 
                             generic map(N_BITS_DATO => 12, 
                                             N_BITS_MUESTRAS => 6,
                                             VENTANA_TIEMPO_MS => 20,
-                                            CLK_FREC => 10E6)
+                                            CLK_FREC => PLL_C0_FREC)
                             port map(
                                         CLK => ADC_CLK,
                                         RESET => not reset_n, 
@@ -97,7 +103,7 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
                                         DATO_PROMEDIADO => CH1_PROMEDIADO);
                                         
         GENERADOR_PULSOS_4HZ :  entity work.GENERADOR_PULSOS
-                                        generic map(CLK_FREC => 10E6, PULSE_FREC => 4)
+                                        generic map(CLK_FREC => PLL_C0_FREC, PULSE_FREC => 4)
                                         port map(
                                                 CLK => ADC_CLK,
                                                 RESET => not reset_n,
@@ -150,6 +156,7 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
         temp_centesimas_centigrado <= s_temp_centesimas_centigrado;
         
         clk_adc <= ADC_CLK;
+        pll_locked_out <= pll_locked;
         
         bit_signo_temp <= temperatura_negativa;
         bcd_decenas_temp <= BCD3_cc;

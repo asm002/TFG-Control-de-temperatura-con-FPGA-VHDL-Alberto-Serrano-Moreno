@@ -7,7 +7,7 @@ entity ADC_DRIVER is
          clk_in  : in  std_logic;   -- 50 MHz de la placa
          reset_n   : in  std_logic; -- reset activo a nivel bajo
 
-         clk_out : out std_logic;   -- reloj interno de lógica (PLL_c0)
+         pll_c0_clk : out std_logic;   -- reloj interno de lógica (PLL_c0)
 
          ch1_data : out std_logic_vector(11 downto 0);
          ch2_data : out std_logic_vector(11 downto 0);
@@ -16,7 +16,9 @@ entity ADC_DRIVER is
          ch5_data : out std_logic_vector(11 downto 0);
          ch6_data : out std_logic_vector(11 downto 0);
 
-         adc_valid : out std_logic
+         adc_valid : out std_logic;
+         pll_locked_out : out std_logic
+         
     );
 end entity;
 
@@ -37,9 +39,12 @@ architecture Behavioral of ADC_DRIVER is
     signal response_startofpacket : STD_LOGIC;
     signal response_endofpacket : STD_LOGIC;
     
+    constant PLL_C0_FREC : integer := 25E6;
     signal PLL_c0 : STD_LOGIC; -- RELOJ DE LA LOGICA PERIFERICA (25 MHZ)
     signal PLL_c1 : STD_LOGIC; -- RELOJ DEL ADC (10 MHZ)
     signal PLL_locked : STD_LOGIC;
+    
+    
     -- En el manual se hace al contrario, se usa c0 para el adc y c1 para la logica. 
     -- No importa, siempre que el asistente del PLL (ip parameter editor)
     -- este bien configurado y se tenga en cuenta cual es cual.
@@ -123,7 +128,8 @@ architecture Behavioral of ADC_DRIVER is
         --command_startofpacket <= '1';
         --command_endofpacket <= '1';
         
-        clk_out <= PLL_c0;
+        pll_c0_clk <= PLL_c0;
+        pll_locked_out <= PLL_locked;
         
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
