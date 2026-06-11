@@ -582,6 +582,17 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO15
 set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
 set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_global_assignment -name POWER_DEFAULT_INPUT_IO_TOGGLE_RATE "12.5 %"
+set_global_assignment -name QIP_FILE ADC_IP/synthesis/ADC_IP.qip
+set_global_assignment -name QIP_FILE PLL_IP.qip
+set_global_assignment -name VHDL_FILE "../Entidades generales/DISPLAY.vhd"
+set_global_assignment -name VHDL_FILE "../Entidades generales/BIN2BCD_9999.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/PLL_IP.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/mV_A_TEMP.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/MEDIA_MOVIL.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/ADC_DRIVER.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/ADC_A_mV.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/ADQUISICION_DE_DATOS.vhd"
 set_global_assignment -name VHDL_FILE "../Entidades generales/GENERADOR_PULSOS.vhd"
 set_global_assignment -name VHDL_FILE UART_TX.vhd
 set_global_assignment -name VHDL_FILE TOP_LEVEL_ENTITY_COM.vhd

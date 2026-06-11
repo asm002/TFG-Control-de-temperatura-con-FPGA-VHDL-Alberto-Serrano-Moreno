@@ -19,9 +19,17 @@ entity COMUNICACIONES is
                              -- (OJO: EN EL PROYECTO FINAL SERIA 
                              -- MEJOR USAR EL RELOJ DEL ADC DE 10MHZ)
         switches : in std_logic_vector (9 downto 0);  -- conexiones a los SW()       
-        reset_n : in std_logic := '0';   -- conexion a arduino reset 
+        reset_n : in std_logic := '0';   -- conexion a reset activo a nivel bajo 
         out_pin : out std_logic;
-        in_pin : in std_logic := '0'
+        in_pin : in std_logic := '0';
+        
+        -- DATOS DE OTRAS AREAS --
+        -- ADQUISICION:
+        bit_signo_temp : in std_logic; 
+        bcd_decenas_temp : in std_logic_vector(3 downto 0);
+        bcd_unidades_temp : in std_logic_vector(3 downto 0);
+        bcd_decimas_temp : in std_logic_vector(3 downto 0)
+        
     );
 END entity;
 
@@ -84,10 +92,10 @@ architecture Behavioral of COMUNICACIONES is
                 indice => msg_byte_indice,
                 byte_out => msg_byte,
                 
-                bit_signo_temp => '0', 
-                bcd_decenas_temp => x"9",
-                bcd_unidades_temp => x"7",
-                bcd_decimas_temp => x"8"
+                bit_signo_temp => bit_signo_temp, 
+                bcd_decenas_temp => bcd_decenas_temp,
+                bcd_unidades_temp => bcd_unidades_temp,
+                bcd_decimas_temp => bcd_decimas_temp
             );
             
         SECUENCIADOR0 : entity work.SECUENCIADOR
