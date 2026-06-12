@@ -21,11 +21,11 @@ entity COMUNICACIONES is
         clk : in std_logic;  -- conexion al reloj de 50 Mhz 
                              -- (OJO: EN EL PROYECTO FINAL SERIA 
                              -- MEJOR USAR EL RELOJ DEL ADC DE 10MHZ)
-        switches : in std_logic_vector (9 downto 0);  -- conexiones a los SW()       
         reset_n : in std_logic := '0';   -- conexion a reset activo a nivel bajo 
-        out_pin : out std_logic;
-        in_pin : in std_logic := '0';
         
+        uart_tx : out std_logic;
+        uart_rx : in std_logic := '0';
+                
         -- DATOS DE OTRAS AREAS --
         -- ADQUISICION:
         bus_temperatura : in t_bus_temperatura
@@ -79,7 +79,7 @@ architecture Behavioral of COMUNICACIONES is
                 baud_ce => baud_clock_enable,
                 tx_start => s_start,   
                 tx_data => s_data,    
-                tx_out => out_pin,    
+                tx_out => uart_tx,    
                 tx_ready => s_ready,    
                 tx_done => s_done   
             );

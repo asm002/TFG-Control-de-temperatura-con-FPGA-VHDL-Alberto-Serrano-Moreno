@@ -36,6 +36,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
     signal reset_and_pll_n : std_logic;
     
     signal bus_temperatura : t_bus_temperatura;
+    signal bus_displays : t_displays_7seg;
     
     begin
         ------------------------------------------------------------------
@@ -49,11 +50,11 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
                 )
             port map(
                 clk => clk_adc,
-                switches => SW,
                 reset_n => reset_and_pll_n,
-                out_pin => ARDUINO_IO(PIN_TX),
-                in_pin => open,
                 
+                uart_tx => ARDUINO_IO(PIN_TX),
+                uart_rx => open,
+                                
                 bus_temperatura => bus_temperatura
                 
             );
@@ -61,26 +62,18 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
         ADQUISICION : entity work.ADQUISICION_DE_DATOS
             port map(
                 clk_50 => MAX10_CLK1_50,
-                switches => SW,       
                 reset_n => ARDUINO_RESET_N, -- mucho cuidado, aqui solo reset de boton,
                                             -- usar reset_and_pll_n crea un bucle
                                             -- infinito y no funciona nada
+                                            
+                modo_displays => SW(0),
                 
-                disp0 => HEX0,
-                disp1 => HEX1,
-                disp2 => HEX2,
-                disp3 => HEX3,
-                disp4 => HEX4,
-                
-                disp5 => HEX5,
                 clk_adc => clk_adc,
                 pll_locked_out => pll_locked,
-                --temp_milivoltios => open,   -- "open" en vhdl sirve para indicar 
-                                            -- de manera explicita que una señal
-                                            -- no se conecta a nada
-                --temp_centesimas_centigrado => open,
                 
-                bus_temperatura => bus_temperatura
+                bus_temperatura => bus_temperatura,
+                displays_out => bus_displays
+                
         );
             
         
@@ -90,6 +83,14 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
         reset_and_pll_n <= ARDUINO_RESET_N and pll_locked;  -- reset de boton y ademas condicionado a que el pll
                                                             -- esté listo. Activo a nivel bajo
         
-        
+        -- BUSES SALIDA
+        HEX0 <= bus_displays(0);
+        HEX1 <= bus_displays(1);
+        HEX2 <= bus_displays(2);
+        HEX3 <= bus_displays(3);
+        HEX4 <= bus_displays(4);
+        HEX5 <= bus_displays(5);
+
+    
         
 end architecture;

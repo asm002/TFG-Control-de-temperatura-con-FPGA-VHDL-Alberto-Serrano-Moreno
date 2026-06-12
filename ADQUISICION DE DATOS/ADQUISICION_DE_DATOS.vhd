@@ -14,20 +14,16 @@ use work.CONFIG_PROYECTO.all;
 entity ADQUISICION_DE_DATOS is
     PORT(
             clk_50 : in std_logic;  -- conexion al reloj de 50 Mhz
-            switches : in std_logic_vector (9 downto 0);  -- conexiones a los SW()       
             reset_n : in std_logic;   -- conexion a reset (mucho cuidado, debe ser un reset de logica inversa, activo a nivel bajo)
-            -- conexiones a los displays (HEX)
-            disp0 : out std_logic_vector (7 downto 0);
-            disp1 : out std_logic_vector (7 downto 0);
-            disp2 : out std_logic_vector (7 downto 0);
-            disp3 : out std_logic_vector (7 downto 0);
-            disp4 : out std_logic_vector (7 downto 0);
-            disp5 : out std_logic_vector (7 downto 0);
+            
+            modo_displays : in std_logic;
+            
             -- salidas de datos para otros modulos
             clk_adc : out std_logic;
             pll_locked_out : out std_logic; -- para mantener sistemas a reset hasta que el pll sea estable
             
-            bus_temperatura : out t_bus_temperatura
+            bus_temperatura : out t_bus_temperatura;
+            displays_out : out t_displays_7seg
             
     );
 END entity;
@@ -122,12 +118,12 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
         BIN2BCD_CENTIGRADOS : entity work.BIN2BCD_9999 generic map(n_bits=>16) port map(temp_centesimas_absoluta, BCD0_cc, BCD1_cc, BCD2_cc, BCD3_cc);
 
         
-        D0 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD0_P, D7SEG => disp0, DP => '0');
-        D1 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD1_P, D7SEG => disp1, DP => DP_H1);
-        D2 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD2_P, D7SEG => disp2, DP => '0');
+        D0 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD0_P, D7SEG => displays_out(0), DP => '0');
+        D1 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD1_P, D7SEG => displays_out(1), DP => DP_H1);
+        D2 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD2_P, D7SEG => displays_out(2), DP => '0');
         D3 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD3_P, D7SEG => D7SEG_H3, DP => '1');
         
-        D4 : entity work.DISPLAY generic map(BCD => true) port map (BIN => "0000", D7SEG => disp4, OFF => '1');
+        D4 : entity work.DISPLAY generic map(BCD => true) port map (BIN => "0000", D7SEG => displays_out(4), OFF => '1');
 
         
         ------------------------------------------------------------------
@@ -136,17 +132,17 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
         
         temp_centesimas_absoluta <= std_logic_vector(abs(s_temp_centesimas_centigrado));
         
-        temperatura_negativa <= s_temp_centesimas_centigrado(15);                                   -- el ultimo bit es el de signo
+        temperatura_negativa <= s_temp_centesimas_centigrado(15);   -- el ultimo bit es el de signo
         
-        disp5 <= "01000110" when switches(0) = '0' else "01000001";
+        displays_out(5) <= "01000110" when modo_displays = '0' else "01000001";
         
-        with std_logic_vector'(switches(0) & temperatura_negativa) select disp3 <= 
-                    "10111111" when "01",                                                       -- modo temperatura y es negativa -> mostrar signo menos
-                    "11111111" when "00",                                                       -- modo temperatura y es positiva -> no signo menos, apagar display
-                    D7SEG_H3   when others;                                                     -- modo tension -> dejar pasar los millares de milivoltio
+        with std_logic_vector'(modo_displays & temperatura_negativa) select displays_out(3) <= 
+                    "10111111" when "01",     -- modo temperatura y es negativa -> mostrar signo menos
+                    "11111111" when "00",     -- modo temperatura y es positiva -> no signo menos, apagar display
+                    D7SEG_H3   when others;   -- modo tension -> dejar pasar los millares de milivoltio
         
         
-        DP_H1 <= '1' when switches(0) = '0' else '0';                                             -- punto decimal de disp1 ; para mostrar XX.X (grados)       
+        DP_H1 <= '1' when modo_displays = '0' else '0'; -- punto decimal de disp1 ; para mostrar XX.X (grados)       
         
         -- asignacion de salidas del modulo
         bus_temperatura.milivoltios <= s_temp_milivoltios;
@@ -176,7 +172,7 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
                     
                 if PULSE_4HZ = '1' then
                 
-                    if switches(0) = '1' then
+                    if modo_displays = '1' then
                             -- MODO MILIVOLTIOS
                             BCD0_P <= BCD0_mv;
                             BCD1_P <= BCD1_mv;
