@@ -7,13 +7,16 @@ package CONFIG_PROYECTO is
     -- CONSTANTES
     constant PLL_C0_FREC : integer := 25E6;
     constant BAUD_FREC : integer := 115200;
-    constant MSG_FREC : integer := 10;
-    constant PIN_TX : integer := 15;
+    constant MSG_FREC : integer := 10;  -- frecuencia a la que se envian los datos por puerto serie (TX)
+                                        -- 10 hz -> 100 ms
+    constant PIN_TX : integer := 15;    -- pin del bus ARDUINO_IO
     constant BITS_MUESTRAS_MEDIA_MOVIL : integer := 8;
-    constant V_TIEMPO_MEDIA_MOVIL : integer := 20;
-    constant MSG_N_BYTES : integer := 11; -- CUIDADO: debe coincidir con el tamaño de indice
+    constant V_TIEMPO_MEDIA_MOVIL : integer := 20;  -- ventana de tiempo en milisegundos
+    constant MSG_N_BYTES : integer := 28; -- CUIDADO: debe coincidir con el tamaño de indice
                                           -- dentro de MENSAJE_TX
-                                          -- NO se modifica automaticamente
+                                          -- No se puede modificar sin modificar la arquitectura
+                                          -- de MENSAJE_TX
+                                          
                                           
     -- BUSES
     type t_bus_temperatura is record
@@ -26,7 +29,7 @@ package CONFIG_PROYECTO is
         
     end record;
 
-    
+    -- Array de displays 7 segmentos
     type t_displays_7seg is array (0 to 5) of std_logic_vector(7 downto 0);
 
 end package;
