@@ -25,6 +25,7 @@ entity COMUNICACIONES is
         
         uart_tx : out std_logic;
         uart_rx : in std_logic := '0';
+        uart_tx_echo : out std_logic;
                 
         -- DATOS DE OTRAS AREAS --
         -- ADQUISICION:
@@ -40,8 +41,13 @@ architecture Behavioral of COMUNICACIONES is
     signal baud_clock_enable : std_logic := '0';
     signal msg_pulse : std_logic := '0';
     
-    signal s_ready, s_start, s_done : std_logic := '0';
-    signal s_data : std_logic_vector(7 downto 0) := (others => '0');
+    signal s_tx_ready, s_tx_start, s_tx_done : std_logic := '0';
+    signal s_tx_byte : std_logic_vector(7 downto 0) := (others => '0');
+    
+    signal s_rx_ready : std_logic := '0';
+    signal s_rx_byte : std_logic_vector(7 downto 0) := (others => '0');
+    
+    signal s_tx_ready_echo, s_tx_done_echo : std_logic := '0';
                                        
     signal msg_byte_indice : integer range 0 to MSG_N_BYTES-1;
     signal msg_byte : std_logic_vector(7 downto 0);
@@ -77,11 +83,11 @@ architecture Behavioral of COMUNICACIONES is
                 clk => clk,       
                 rst => not reset_n,
                 baud_ce => baud_clock_enable,
-                tx_start => s_start,   
-                tx_data => s_data,    
+                tx_start => s_tx_start,   
+                tx_byte => s_tx_byte,    
                 tx_out => uart_tx,    
-                tx_ready => s_ready,    
-                tx_done => s_done   
+                tx_ready => s_tx_ready,    
+                tx_done => s_tx_done   
             );
             
         MENSAJE_TX0 : entity work.MENSAJE_TX
@@ -100,14 +106,41 @@ architecture Behavioral of COMUNICACIONES is
                 clk => clk,
                 rst => not reset_n,
                 mandar_mensaje => msg_pulse,
-                tx_ready => s_ready,
-                tx_done => s_done,
-                tx_start => s_start,
-                tx_data => s_data,
+                tx_ready => s_tx_ready,
+                tx_done => s_tx_done,
+                tx_start => s_tx_start,
+                tx_data => s_tx_byte,
                 
                 msg_byte_indice => msg_byte_indice,
                 msg_byte => msg_byte
                 );
+
+        UART_RX0 : entity work.UART_RX
+            generic map (
+                CLK_FREC => CLK_FREQ,
+                BAUD_FREC => BAUD_FREQ
+            )
+            port map (
+                clk => clk,
+                rst => not reset_n,
+                rx_in => uart_rx,
+                rx_byte => s_rx_byte,
+                rx_ready => s_rx_ready 
+            );
+
+        UART_TX_echo_RX: entity work.UART_TX
+            port map (
+                clk => clk,
+                rst => not reset_n,
+                baud_ce => baud_clock_enable,
+                tx_start => s_rx_ready,
+                tx_byte => s_rx_byte,
+                tx_out => uart_tx_echo,
+                tx_ready => s_tx_ready_echo,
+                tx_done => s_tx_done_echo
+            );
+
+
         
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS

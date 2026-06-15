@@ -53,7 +53,8 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
                 reset_n => reset_and_pll_n,
                 
                 uart_tx => ARDUINO_IO(PIN_TX),
-                uart_rx => open,
+                uart_rx => ARDUINO_IO(PIN_RX),
+                uart_tx_echo => ARDUINO_IO(PIN_TX_ECHO),
                                 
                 bus_temperatura => bus_temperatura
                 

@@ -5,11 +5,14 @@ use IEEE.numeric_std.all;
 package CONFIG_PROYECTO is
 
     -- CONSTANTES
-    constant PLL_C0_FREC : integer := 25E6;
+    constant PLL_C0_FREC : integer := 25E6; -- lo suyo sería modificar el PLL para que esta frecuencia sea 50 Mhz
+                                            -- cuanto mas alta, menores imprecisiones y mejor pwm
     constant BAUD_FREC : integer := 115200;
     constant MSG_FREC : integer := 10;  -- frecuencia a la que se envian los datos por puerto serie (TX)
                                         -- 10 hz -> 100 ms
     constant PIN_TX : integer := 15;    -- pin del bus ARDUINO_IO
+    constant PIN_RX : integer := 14;    -- pin del bus ARDUINO_IO
+    constant PIN_TX_ECHO : integer := 13; -- pin de eco, donde se manda lo mismo que se recibe
     constant BITS_MUESTRAS_MEDIA_MOVIL : integer := 8;
     constant V_TIEMPO_MEDIA_MOVIL : integer := 20;  -- ventana de tiempo en milisegundos
     constant MSG_N_BYTES : integer := 28; -- CUIDADO: debe coincidir con el tamaño de indice

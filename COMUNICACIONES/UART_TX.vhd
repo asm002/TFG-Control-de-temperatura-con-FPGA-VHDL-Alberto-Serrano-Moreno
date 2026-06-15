@@ -8,7 +8,7 @@ entity UART_TX is
         rst         : in  std_logic;                    
         baud_ce     : in  std_logic;    -- pulso de habilitación para cumplir los baudios
         tx_start    : in  std_logic;    -- orden de empezar a transmitir (pulso)
-        tx_data     : in  std_logic_vector(7 downto 0);
+        tx_byte     : in  std_logic_vector(7 downto 0);
         tx_out      : out std_logic;    -- bit serie de salida
         tx_ready    : out std_logic;    -- '1' si está libre, '0' si está ocupado
         tx_done     : out std_logic     -- pulso de fin de transmisión (1 byte enviado)
@@ -64,7 +64,7 @@ architecture Behavioral of UART_TX is
                     when REPOSO =>
                         salida <= '1'; -- Línea en alto
                         if tx_start = '1' then
-                            registro_datos <= tx_data; -- Capturamos el byte inmediatamente
+                            registro_datos <= tx_byte; -- Capturamos el byte inmediatamente
                             estado   <= BIT_START;
                         end if;
 
