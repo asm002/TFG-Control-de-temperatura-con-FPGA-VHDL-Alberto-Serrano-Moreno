@@ -67,6 +67,10 @@ architecture Behavioral of UART_RX is
     
     -- Ejemplo para 50 MHz y 115200 baudios: 50000000 / 115200 = 434;
     
+    ------------------------------------------------------------------
+    -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
+    ------------------------------------------------------------------
+    
     constant CICLOS_POR_BIT : integer := CLK_FREC/BAUD_FREC;
 
     type maquina_estados is (REPOSO, BIT_START, BITS_DATOS, BIT_STOP);
@@ -76,92 +80,109 @@ architecture Behavioral of UART_RX is
     signal indice_bit     : integer range 0 to 7 := 0;
     signal buffer_datos   : std_logic_vector(7 downto 0) := (others => '0');
 
-begin
-
-    process(clk)
     begin
-        if rst = '1' then
-            estado         <= REPOSO;
-            contador_reloj <= 0;
-            indice_bit     <= 0;
-            rx_ready       <= '0';
-            rx_byte        <= (others => '0');
-            buffer_datos   <= (others => '0');
-            
-        elsif rising_edge(clk) then
-            -- Por defecto, el pulso de dato listo siempre a 0
-            rx_ready <= '0';
-            
-            case estado is
-            
-                -- ESTADO 1: esperar flanco descendente (posible bit de start)
-                when REPOSO =>
-                    contador_reloj <= 0;
-                    indice_bit <= 0;
-                    
-                    if rx_in = '0' then
-                        estado <= BIT_START;
-                    end if;
+        ------------------------------------------------------------------
+        -- MAPEO DE ENTIDADES INTERNAS
+        ------------------------------------------------------------------
+        
+        
+        ------------------------------------------------------------------
+        -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
+        ------------------------------------------------------------------
+        
+        
+        ------------------------------------------------------------------
+        -- LOGICA SECUENCIAL ; PROCESOS
+        ------------------------------------------------------------------
 
-                -- ESTADO 2: situarse en el centro del bit y confirmar que sigue siendo '0'
-                when BIT_START =>
-                    -- Hasta que no estemos en el centro del bit no hacemos nada mas
-                    if contador_reloj = (CICLOS_POR_BIT - 1) / 2 then 
-                        if rx_in = '0' then
-                            contador_reloj <= 0; -- reset del contador para la captura
-                                                 -- de los datos en el estado siguiente
-                            estado         <= BITS_DATOS;
-                        else
-                            -- era ruido, volvemos a reposo
-                            estado         <= REPOSO;
-                        end if;
-                    else
-                        contador_reloj <= contador_reloj + 1;
-                    end if;
+        process(clk, rst)  -- reset asincrono
+        ------------------------------------------------------------------
+        -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
+        ------------------------------------------------------------------
 
-                -- ESTADO 3: guardar bits de datos en buffer
-                when BITS_DATOS =>
-                    -- Dado que nos situamos en el centro del bit de start en el estado anterior,
-                    -- ahora hay que sumar ciclos completos para ir saltando por los consecutivos
-                    -- bits de datos.
-                    if contador_reloj = CICLOS_POR_BIT - 1 then
+        begin
+            if rst = '1' then
+                estado         <= REPOSO;
+                contador_reloj <= 0;
+                indice_bit     <= 0;
+                rx_ready       <= '0';
+                rx_byte        <= (others => '0');
+                buffer_datos   <= (others => '0');
+                
+            elsif rising_edge(clk) then
+                -- Por defecto, el pulso de dato listo siempre a 0
+                rx_ready <= '0';
+                
+                case estado is
+                
+                    -- ESTADO 1: esperar flanco descendente (posible bit de start)
+                    when REPOSO =>
                         contador_reloj <= 0;
-                        buffer_datos(indice_bit) <= rx_in; -- guardamos el bit recibido
+                        indice_bit <= 0;
                         
-                        -- comprobamos si ya hemos leído los 8 bits
-                        if indice_bit = 7 then
-                            estado <= BIT_STOP;
-                            indice_bit <= 0;
-                        else
-                            indice_bit <= indice_bit + 1;
+                        if rx_in = '0' then
+                            estado <= BIT_START;
                         end if;
-                    else
-                        contador_reloj <= contador_reloj + 1;
-                    end if;
 
-                -- ESTADO 4: esperar bit de stop
-                when BIT_STOP =>
-                    -- Nuevamente avanzamos un ciclo de bit para situarnos en el centro
-                    -- del bit de stop.
-                    -- Independientemente de si el bit es 1 o hay un error, 
-                    -- enviamos el byte al exterior y damos el pulso de validez.
-                    if contador_reloj = CICLOS_POR_BIT - 1 then
-                        -- no hace falta resetear el buffer porque en el siguiente
-                        -- ciclo, antes de mandarse, se habrá sobrescrito con los nuevos bits
-                        rx_byte  <= buffer_datos;
-                        rx_ready <= '1';
-                        contador_reloj <= 0;
-                        estado         <= REPOSO;
-                    else
-                        contador_reloj <= contador_reloj + 1;
-                    end if;
+                    -- ESTADO 2: situarse en el centro del bit y confirmar que sigue siendo '0'
+                    when BIT_START =>
+                        -- Hasta que no estemos en el centro del bit no hacemos nada mas
+                        if contador_reloj = (CICLOS_POR_BIT - 1) / 2 then 
+                            if rx_in = '0' then
+                                contador_reloj <= 0; -- reset del contador para la captura
+                                                    -- de los datos en el estado siguiente
+                                estado         <= BITS_DATOS;
+                            else
+                                -- era ruido, volvemos a reposo
+                                estado         <= REPOSO;
+                            end if;
+                        else
+                            contador_reloj <= contador_reloj + 1;
+                        end if;
 
-                -- ESTADO 5: Limpieza de un ciclo para asegurar la transición
-                -- when ESPERA =>
-                    -- estado <= REPOSO;
-                    
-            end case;
-        end if;
-    end process;
+                    -- ESTADO 3: guardar bits de datos en buffer
+                    when BITS_DATOS =>
+                        -- Dado que nos situamos en el centro del bit de start en el estado anterior,
+                        -- ahora hay que sumar ciclos completos para ir saltando por los consecutivos
+                        -- bits de datos.
+                        if contador_reloj = CICLOS_POR_BIT - 1 then
+                            contador_reloj <= 0;
+                            buffer_datos(indice_bit) <= rx_in; -- guardamos el bit recibido
+                            
+                            -- comprobamos si ya hemos leído los 8 bits
+                            if indice_bit = 7 then
+                                estado <= BIT_STOP;
+                                indice_bit <= 0;
+                            else
+                                indice_bit <= indice_bit + 1;
+                            end if;
+                        else
+                            contador_reloj <= contador_reloj + 1;
+                        end if;
+
+                    -- ESTADO 4: esperar bit de stop
+                    when BIT_STOP =>
+                        -- Nuevamente avanzamos un ciclo de bit para situarnos en el centro
+                        -- del bit de stop.
+                        -- Independientemente de si el bit es 1 o hay un error, 
+                        -- enviamos el byte al exterior y damos el pulso de validez.
+                        if contador_reloj = CICLOS_POR_BIT - 1 then
+                            -- no hace falta resetear el buffer porque en el siguiente
+                            -- ciclo, antes de mandarse, se habrá sobrescrito con los nuevos bits
+                            rx_byte  <= buffer_datos;
+                            rx_ready <= '1';
+                            contador_reloj <= 0;
+                            estado         <= REPOSO;
+                        else
+                            contador_reloj <= contador_reloj + 1;
+                        end if;
+
+                    -- ESTADO 5: Limpieza de un ciclo para asegurar la transición
+                    -- when ESPERA =>
+                        -- estado <= REPOSO;
+                        
+                end case;
+            end if;
+        end process;
 
 end architecture;

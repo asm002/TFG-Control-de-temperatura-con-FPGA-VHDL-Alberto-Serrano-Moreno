@@ -49,7 +49,7 @@ architecture Behavioral of COMUNICACIONES is
     
     signal s_tx_ready_echo, s_tx_done_echo : std_logic := '0';
                                        
-    signal msg_byte_indice : integer range 0 to MSG_N_BYTES-1;
+    signal msg_byte_indice : integer range 0 to MSG_N_BYTES_TX-1;
     signal msg_byte : std_logic_vector(7 downto 0);
     
     begin
@@ -100,7 +100,7 @@ architecture Behavioral of COMUNICACIONES is
             
         SECUENCIADOR0 : entity work.SECUENCIADOR
             generic map(
-                MSG_N_BYTES => MSG_N_BYTES
+                MSG_N_BYTES => MSG_N_BYTES_TX
             )
             port map(
                 clk => clk,

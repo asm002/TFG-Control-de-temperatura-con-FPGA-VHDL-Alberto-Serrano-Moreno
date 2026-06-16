@@ -10,7 +10,7 @@ use work.CONFIG_PROYECTO.all;
 
 entity MENSAJE_TX is
     port(
-        indice : in integer range 0 to MSG_N_BYTES-1;
+        indice : in integer range 0 to MSG_N_BYTES_TX-1;
         byte_out : out std_logic_vector(7 downto 0);
         
         -- TEMPERATURA (aprovechamos los convertidores BCD de la adquisicion)

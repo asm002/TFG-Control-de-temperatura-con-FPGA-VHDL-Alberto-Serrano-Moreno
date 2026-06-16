@@ -585,6 +585,7 @@ set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name POWER_DEFAULT_INPUT_IO_TOGGLE_RATE "12.5 %"
 set_global_assignment -name TIMEQUEST_MULTICORNER_ANALYSIS ON
 set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
+set_global_assignment -name VHDL_FILE BUFFER_RX.vhd
 set_global_assignment -name VHDL_FILE UART_RX.vhd
 set_global_assignment -name VHDL_FILE "../Entidades generales/CONFIG_PROYECTO.VHD"
 set_global_assignment -name QIP_FILE ADC_IP/synthesis/ADC_IP.qip
