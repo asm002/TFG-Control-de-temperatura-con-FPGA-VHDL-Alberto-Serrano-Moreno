@@ -19,10 +19,10 @@ package CONFIG_PROYECTO is
     constant BITS_MUESTRAS_MEDIA_MOVIL : integer := 8;
     constant V_TIEMPO_MEDIA_MOVIL : integer := 20;  -- ventana de tiempo en milisegundos
 
-    constant MSG_N_BYTES_TX : integer := 28; -- CUIDADO: debe coincidir con el tamaño
-                                          -- de indice dentro de MENSAJE_TX
-                                          -- No se puede modificar sin modificar la
-                                          -- arquitectura de MENSAJE_TX
+    constant MSG_N_BYTES_TX : integer := 29; -- CUIDADO: debe coincidir con el tamaño
+                                             -- de indice dentro de MENSAJE_TX.
+                                             -- No se puede modificar sin modificar la
+                                             -- arquitectura de MENSAJE_TX
 
     constant N_BYTES_BUFFER_RX : integer := 64;  -- debe ser >= al numero maximo de 
                                                  -- bytes que podrá enviar el PC
@@ -40,13 +40,13 @@ package CONFIG_PROYECTO is
         
     end record;
 
-    type t_control is record
+    type t_bus_control is record
         modo     : std_logic;  -- '0' -> lazo abierto ; '1' -> lazo cerrado
         pwm      : std_logic_vector(9 downto 0);   -- 0 a 1023
         kp       : std_logic_vector(15 downto 0);  -- 0.00 a 99.99
         ki       : std_logic_vector(15 downto 0);  -- 0.00 a 99.99
         kd       : std_logic_vector(15 downto 0);  -- 0.00 a 99.99
-        consigna : std_logic_vector(15 downto 0);  -- -99.99 a +99.99
+        consigna : signed(15 downto 0);  -- -99.90 a +99.90
     end record;
 
     -- Array de displays 7 segmentos

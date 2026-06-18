@@ -24,7 +24,7 @@ entity PARSER_ASCII_RX is
 
 
         -- INTERFAZ CON EL SISTEMA DE CONTROL
-        control_rx     : out t_control;  -- bus con todas las señales leidas 
+        control_rx     : out t_bus_control;  -- bus con todas las señales leidas 
         
         -- pulsos de habilitación (1 ciclo de reloj) para indicar qué dato es válido
         modo_valid      : out std_logic; 
@@ -60,7 +60,7 @@ architecture Behavioral of PARSER_ASCII_RX is
     signal indice_pid    : integer range 0 to 3 := 0;
 
     -- Registro de salidas
-    signal reg_out : t_control := (
+    signal reg_out : t_bus_control := (
         modo => '0', 
         pwm => (others => '0'), 
         kp => (others => '0'), 
@@ -210,7 +210,7 @@ architecture Behavioral of PARSER_ASCII_RX is
                                 when 0 => reg_out.kp <= std_logic_vector(to_signed(valor, 16));
                                 when 1 => reg_out.ki <= std_logic_vector(to_signed(valor, 16));
                                 when 2 => reg_out.kd <= std_logic_vector(to_signed(valor, 16));
-                                when 3 => reg_out.consigna <= std_logic_vector(to_signed(valor, 16));
+                                when 3 => reg_out.consigna <= to_signed(valor, 16);
                             end case;
                         end if;
 

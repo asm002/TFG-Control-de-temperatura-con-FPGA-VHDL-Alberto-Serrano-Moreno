@@ -12,14 +12,12 @@ use work.CONFIG_PROYECTO.all;
 
 entity COMUNICACIONES is
     generic(
-        CLK_FREQ : integer := 50E6;
-        BAUD_FREQ : integer := 115200;
-        MSG_FREQ : integer := 10    -- 100 ms -> 10 hz
+        CLK_FREQ : integer;
+        BAUD_FREQ : integer;
+        MSG_FREQ : integer
     );
     PORT(
-        clk : in std_logic;  -- conexion al reloj de 50 Mhz 
-                             -- (OJO: EN EL PROYECTO FINAL SERIA 
-                             -- MEJOR USAR EL RELOJ DEL ADC DE 10MHZ)
+        clk : in std_logic;
         reset_n : in std_logic := '0';   -- conexion a reset activo a nivel bajo 
         
         uart_tx : out std_logic;
@@ -50,12 +48,19 @@ architecture Behavioral of COMUNICACIONES is
                                        
     signal msg_byte_indice : integer range 0 to MSG_N_BYTES_TX-1;
     signal msg_byte : std_logic_vector(7 downto 0);
+
+    signal s_rx_buffer_ready, s_rx_liberar_buffer : std_logic;
+    signal s_rx_indice_buffer_out_byte : integer range 0 to N_BYTES_BUFFER_RX-1;
+    signal s_rx_buffer_out_byte : std_logic_vector(7 downto 0);
+
+    signal control_data_rx : t_bus_control;
+    signal s_modo_valid, s_pwm_valid, s_pid_valid : std_logic;
     
     begin
         ------------------------------------------------------------------
         -- MAPEO DE ENTIDADES INTERNAS
         ------------------------------------------------------------------
-        BAUD_GEN : entity work.GENERADOR_PULSOS
+        BAUD_GEN0 : entity work.GENERADOR_PULSOS
             generic map(
                 CLK_FREC => CLK_FREQ,
                 PULSE_FREC => BAUD_FREQ
@@ -66,7 +71,7 @@ architecture Behavioral of COMUNICACIONES is
                 PULSE => baud_clock_enable
             );
         
-        FREC_MENSAJE : entity work.GENERADOR_PULSOS
+        FREC_MENSAJE0 : entity work.GENERADOR_PULSOS
             generic map(
                 CLK_FREC => CLK_FREQ,
                 PULSE_FREC => MSG_FREQ
@@ -94,7 +99,11 @@ architecture Behavioral of COMUNICACIONES is
                 indice => msg_byte_indice,
                 byte_out => msg_byte,
                 
-                bus_temperatura => bus_temperatura
+                bus_temperatura => bus_temperatura,
+                bus_control => control_data_rx -- CAMBIAR!!! Ha servido para probar,
+                -- pero los datos de control que se envian al pc no deben provenir
+                -- directamente de la lectura del puerto serie, 
+                -- sino del registro del modulo de control cuando esté hecho
             );
             
         SECUENCIADOR0 : entity work.SECUENCIADOR
@@ -127,7 +136,7 @@ architecture Behavioral of COMUNICACIONES is
                 rx_ready => s_rx_ready 
             );
 
-        UART_TX_echo_RX: entity work.UART_TX
+        UART_TX_echo_RX0: entity work.UART_TX
             port map (
                 clk => clk,
                 rst => not reset_n,
@@ -138,6 +147,42 @@ architecture Behavioral of COMUNICACIONES is
                 tx_ready => s_tx_ready_echo,
                 tx_done => s_tx_done_echo
             );
+
+        BUFFER_RX0 : entity work.BUFFER_RX
+            port map (
+                clk => clk,
+                rst => not reset_n,
+
+                -- INTERFAZ CON UART_RX
+                rx_byte => s_rx_byte,
+                rx_ready => s_rx_ready,
+
+                -- INTERFAZ CON PARSER_ASCII
+                buffer_ready => s_rx_buffer_ready,
+                liberar_buffer => s_rx_liberar_buffer,
+                indice_out_byte => s_rx_indice_buffer_out_byte,
+                out_byte => s_rx_buffer_out_byte
+            );
+
+        
+        PARSER_ASCII_RX0 : entity work.PARSER_ASCII_RX
+            port map (
+                clk => clk,
+                rst => not reset_n,
+
+                -- INTERFAZ CON BUFFER_RX
+                buffer_ready => s_rx_buffer_ready,
+                in_byte => s_rx_buffer_out_byte,
+                indice_out_byte => s_rx_indice_buffer_out_byte,
+                liberar_buffer => s_rx_liberar_buffer,
+
+                -- INTERFAZ CON EL SISTEMA DE CONTROL
+                control_rx => control_data_rx,
+                modo_valid => s_modo_valid,
+                pwm_valid => s_pwm_valid,
+                pid_valid => s_pid_valid
+            );
+
 
 
         
