@@ -40,6 +40,15 @@ package CONFIG_PROYECTO is
         
     end record;
 
+    type t_control is record
+        modo     : std_logic;  -- '0' -> lazo abierto ; '1' -> lazo cerrado
+        pwm      : std_logic_vector(9 downto 0);   -- 0 a 1023
+        kp       : std_logic_vector(15 downto 0);  -- 0.00 a 99.99
+        ki       : std_logic_vector(15 downto 0);  -- 0.00 a 99.99
+        kd       : std_logic_vector(15 downto 0);  -- 0.00 a 99.99
+        consigna : std_logic_vector(15 downto 0);  -- -99.99 a +99.99
+    end record;
+
     -- Array de displays 7 segmentos
     type t_displays_7seg is array (0 to 5) of std_logic_vector(7 downto 0);
 
