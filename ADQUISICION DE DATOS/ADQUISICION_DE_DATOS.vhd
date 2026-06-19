@@ -8,7 +8,6 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library work;
 use work.CONFIG_PROYECTO.all;
 
 entity ADQUISICION_DE_DATOS is
