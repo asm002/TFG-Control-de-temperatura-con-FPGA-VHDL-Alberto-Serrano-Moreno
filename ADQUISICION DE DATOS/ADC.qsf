@@ -582,17 +582,17 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO12
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO13
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO14
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO15
+set_global_assignment -name VHDL_FILE VHDL/TOP_LEVEL_ENTITY_ADC.vhd
+set_global_assignment -name VHDL_FILE VHDL/PLL_IP.vhd
+set_global_assignment -name VHDL_FILE VHDL/mV_A_TEMP.vhd
+set_global_assignment -name VHDL_FILE VHDL/MEDIA_MOVIL.vhd
+set_global_assignment -name VHDL_FILE VHDL/ADQUISICION_DE_DATOS.vhd
+set_global_assignment -name VHDL_FILE VHDL/ADC_DRIVER.vhd
+set_global_assignment -name VHDL_FILE VHDL/ADC_A_mV.vhd
+set_global_assignment -name QIP_FILE PLL_IP.qip
+set_global_assignment -name QIP_FILE ADC_IP/synthesis/ADC_IP.qip
 set_global_assignment -name VHDL_FILE "../Entidades generales/CONFIG_PROYECTO.VHD"
-set_global_assignment -name VHDL_FILE TOP_LEVEL_ENTITY_ADC.vhd
-set_global_assignment -name VHDL_FILE mV_A_TEMP.vhd
-set_global_assignment -name VHDL_FILE ADC_A_mV.vhd
 set_global_assignment -name VHDL_FILE "../Entidades generales/GENERADOR_PULSOS.vhd"
 set_global_assignment -name VHDL_FILE "../Entidades generales/DISPLAY.vhd"
 set_global_assignment -name VHDL_FILE "../Entidades generales/BIN2BCD_9999.vhd"
-set_global_assignment -name VHDL_FILE MEDIA_MOVIL.vhd
-set_global_assignment -name QIP_FILE ADC_IP/synthesis/ADC_IP.qip
-set_global_assignment -name VHDL_FILE PLL_IP.vhd
-set_global_assignment -name QIP_FILE PLL_IP.qip
-set_global_assignment -name VHDL_FILE ADC_DRIVER.vhd
-set_global_assignment -name VHDL_FILE ADQUISICION_DE_DATOS.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

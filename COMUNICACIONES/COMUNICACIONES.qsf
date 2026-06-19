@@ -594,24 +594,25 @@ set_global_assignment -name EDA_TEST_BENCH_NAME "test buffer rx" -section_id eda
 set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id "test buffer rx"
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME "test buffer rx" -section_id "test buffer rx"
 set_global_assignment -name EDA_TEST_BENCH_FILE TB_BUFFER_RX.vhd -section_id "test buffer rx"
-set_global_assignment -name VHDL_FILE PARSER_ASCII_RX.vhd
-set_global_assignment -name VHDL_FILE BUFFER_RX.vhd
-set_global_assignment -name VHDL_FILE UART_RX.vhd
+set_global_assignment -name QIP_FILE "../ADQUISICION DE DATOS/ADC_IP/synthesis/ADC_IP.qip"
+set_global_assignment -name QIP_FILE "../ADQUISICION DE DATOS/PLL_IP.qip"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/TOP_LEVEL_ENTITY_ADC.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/PLL_IP.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/mV_A_TEMP.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/MEDIA_MOVIL.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADQUISICION_DE_DATOS.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_DRIVER.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_A_mV.vhd"
+set_global_assignment -name VHDL_FILE VHDL/UART_TX.vhd
+set_global_assignment -name VHDL_FILE VHDL/UART_RX.vhd
+set_global_assignment -name VHDL_FILE VHDL/TOP_LEVEL_ENTITY_COM.vhd
+set_global_assignment -name VHDL_FILE VHDL/SECUENCIADOR.vhd
+set_global_assignment -name VHDL_FILE VHDL/PARSER_ASCII_RX.vhd
+set_global_assignment -name VHDL_FILE VHDL/MENSAJE_TX.vhd
+set_global_assignment -name VHDL_FILE VHDL/COMUNICACIONES.vhd
+set_global_assignment -name VHDL_FILE VHDL/BUFFER_RX.vhd
 set_global_assignment -name VHDL_FILE "../Entidades generales/CONFIG_PROYECTO.VHD"
-set_global_assignment -name QIP_FILE ADC_IP/synthesis/ADC_IP.qip
-set_global_assignment -name QIP_FILE PLL_IP.qip
 set_global_assignment -name VHDL_FILE "../Entidades generales/DISPLAY.vhd"
 set_global_assignment -name VHDL_FILE "../Entidades generales/BIN2BCD_9999.vhd"
-set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/PLL_IP.vhd"
-set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/mV_A_TEMP.vhd"
-set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/MEDIA_MOVIL.vhd"
-set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/ADC_DRIVER.vhd"
-set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/ADC_A_mV.vhd"
-set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/ADQUISICION_DE_DATOS.vhd"
 set_global_assignment -name VHDL_FILE "../Entidades generales/GENERADOR_PULSOS.vhd"
-set_global_assignment -name VHDL_FILE UART_TX.vhd
-set_global_assignment -name VHDL_FILE TOP_LEVEL_ENTITY_COM.vhd
-set_global_assignment -name VHDL_FILE COMUNICACIONES.vhd
-set_global_assignment -name VHDL_FILE SECUENCIADOR.vhd
-set_global_assignment -name VHDL_FILE MENSAJE_TX.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
