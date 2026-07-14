@@ -33,6 +33,8 @@ architecture Behavioral of TOP_LEVEL_ENTITY_PWM is
 
     signal pulso_200hz : std_logic := '0';
     signal contador_pwm_manual : UNSIGNED(10-1 downto 0) := (others => '0');   -- 0 a 1023
+
+    signal pwm_bcd : t_bus_bcd;
     
     
     begin
@@ -63,15 +65,40 @@ architecture Behavioral of TOP_LEVEL_ENTITY_PWM is
                 PULSE => pulso_200hz
             );
 
-   
+        BIN2BCD_9999_inst : entity work.BIN2BCD_9999
+            generic map (
+                n_bits => 10
+            )
+            port map (
+                BIN => std_logic_vector(contador_pwm_manual),
+                BCD0 => pwm_bcd.bcd0,
+                BCD1 => pwm_bcd.bcd1,
+                BCD2 => pwm_bcd.bcd2,
+                BCD3 => pwm_bcd.bcd3
+            );
         
+        D0 : entity work.DISPLAY
+            generic map (BCD => true) port map (pwm_bcd.bcd0, HEX0);
+
+        D1 : entity work.DISPLAY
+            generic map (BCD => true) port map (pwm_bcd.bcd1, HEX1);
+
+        D2 : entity work.DISPLAY
+            generic map (BCD => true) port map (pwm_bcd.bcd2, HEX2);
+
+        D3 : entity work.DISPLAY
+            generic map (BCD => true) port map (pwm_bcd.bcd3, HEX3);
+
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
         ARDUINO_IO(15) <= pwm;
         ARDUINO_IO(14) <= '1';
-        LEDR(9) <= '1';
-        LEDR(0) <= pwm;
+        LEDR(8) <= '1';
+        LEDR(9) <= pwm;
+
+        HEX4 <= (others => '1');
+        HEX5 <= (others => '1');
 
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS

@@ -49,7 +49,13 @@ package CONFIG_PROYECTO is
         consigna : signed(15 downto 0);  -- -99.90 a +99.90
     end record;
 
+    type t_bus_bcd is record
+        bcd0, bcd1, bcd2, bcd3 : std_logic_vector(3 downto 0);
+    end record;
+
     -- Array de displays 7 segmentos
     type t_displays_7seg is array (0 to 5) of std_logic_vector(7 downto 0);
+
+    
 
 end package;
