@@ -32,7 +32,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_PWM is
     signal pwm : std_logic := '0';
 
     signal pulso_200hz : std_logic := '0';
-    signal contador_pwm_manual : UNSIGNED(10-1 downto 0) := (others => '0');   -- 0 a 1023
+    signal contador_pwm_manual : UNSIGNED(N_BITS_PWM-1 downto 0) := (others => '0');   -- 0 a 1023
 
     signal pwm_bcd : t_bus_bcd;
     
@@ -44,8 +44,8 @@ architecture Behavioral of TOP_LEVEL_ENTITY_PWM is
         PWM0 : entity work.PWM
             generic map (
                 CLK_FREC => 50E6,
-                PWM_FREC => 1E3,
-                N_BITS => 10
+                PWM_FREC => FREC_PWM,
+                N_BITS => N_BITS_PWM
             )
             port map (
                 clk => MAX10_CLK1_50,
@@ -67,7 +67,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_PWM is
 
         BIN2BCD_9999_inst : entity work.BIN2BCD_9999
             generic map (
-                n_bits => 10
+                n_bits => N_BITS_PWM
             )
             port map (
                 BIN => std_logic_vector(contador_pwm_manual),
@@ -92,7 +92,8 @@ architecture Behavioral of TOP_LEVEL_ENTITY_PWM is
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
-        ARDUINO_IO(15) <= pwm;
+        ARDUINO_IO(15) <= not pwm;  -- señal negada porque la etapa de potencia
+                                    -- tiene señal de control activa a nivel bajo
         ARDUINO_IO(14) <= '1';
         LEDR(8) <= '1';
         LEDR(9) <= pwm;
@@ -114,8 +115,10 @@ architecture Behavioral of TOP_LEVEL_ENTITY_PWM is
 
                     else
                         if pulso_200hz = '1' then
-                            if not KEY(1) = '1' then
+                            if not KEY(0) = '1' and contador_pwm_manual < 1023 then
                                 contador_pwm_manual <= contador_pwm_manual + 1;
+                            elsif not KEY(1) = '1' and contador_pwm_manual > 0 then
+                                contador_pwm_manual <= contador_pwm_manual - 1;
                             end if;
                         end if;
                     end if;

@@ -27,6 +27,10 @@ package CONFIG_PROYECTO is
     constant N_BYTES_BUFFER_RX : integer := 64;  -- debe ser >= al numero maximo de 
                                                  -- bytes que podrá enviar el PC
     
+    constant N_BITS_PWM : integer := 10;
+    constant FREC_PWM : integer := 500;
+    constant PIN_PWM : integer := 12;
+    
                                           
                                           
     -- BUSES
