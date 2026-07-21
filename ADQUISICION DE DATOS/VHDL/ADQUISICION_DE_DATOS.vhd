@@ -15,7 +15,7 @@ entity ADQUISICION_DE_DATOS is
             clk_50 : in std_logic;  -- conexion al reloj de 50 Mhz
             reset_n : in std_logic;   -- conexion a reset (mucho cuidado, debe ser un reset de logica inversa, activo a nivel bajo)
             
-            modo_displays : in std_logic;
+            modo_displays : in std_logic;   --'0': temperatura ; '1': milivoltios
             
             -- salidas de datos para otros modulos
             clk_adc : out std_logic;
