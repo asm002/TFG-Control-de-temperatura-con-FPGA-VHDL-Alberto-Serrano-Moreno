@@ -59,12 +59,12 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
         ------------------------------------------------------------------
         PWM0 : entity work.PWM
             generic map (
-                CLK_FREC => 50E6,
+                CLK_FREC => PLL_C0_FREC,
                 PWM_FREC => FREC_PWM,
                 N_BITS => N_BITS_PWM
             )
             port map (
-                clk => MAX10_CLK1_50,
+                clk => clk_adc,
                 reset_n => reset_and_pll_n,
                 t_on => std_logic_vector(contador_pwm_manual),
                 pwm_out => salida_digital_pwm
@@ -72,11 +72,11 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
 
         GENERADOR_PULSOS_inst : entity work.GENERADOR_PULSOS
             generic map (
-                CLK_FREC => 50E6,
+                CLK_FREC => PLL_C0_FREC,
                 PULSE_FREC => 205
             )
             port map (
-                CLK => MAX10_CLK1_50,
+                CLK => clk_adc,
                 RESET => not reset_and_pll_n,
                 PULSE => pulso_200hz
             );
@@ -94,7 +94,8 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
                 bus_temperatura => bus_temperatura,
 
                 -- se puede eliminar, el modulo ya no necesita gestionar señales de displays internamente
-                -- porque lo hacemos desde top. Eso si, habria que modificar TOP_LEVEL_ENTITY_ADC porque dejaria de funcionar
+                -- porque lo hacemos desde top. 
+                -- Eso si, habria que modificar TOP_LEVEL_ENTITY_ADC y _COM porque dejaria de funcionar
                 displays_out => open
             );
 
