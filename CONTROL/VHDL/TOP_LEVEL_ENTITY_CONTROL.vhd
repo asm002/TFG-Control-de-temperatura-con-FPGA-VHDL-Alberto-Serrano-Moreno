@@ -32,7 +32,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
     -- PWM --
     signal salida_digital_pwm : std_logic := '0';
     signal pulso_200hz : std_logic := '0';  -- para ajustar el PWM manualmente
-    signal contador_pwm_manual : UNSIGNED(N_BITS_PWM-1 downto 0) := (others => '0');   -- 0 a 1023
+    signal t_on : UNSIGNED(N_BITS_PWM-1 downto 0) := (others => '0');   -- 0 a 1023
     
 
     -- ADQUISICION --
@@ -42,7 +42,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
     signal bus_temperatura : t_bus_temperatura;
 
 
-    -- GESTION DE DISPLAYS
+    -- GESTION DE DISPLAYS --
     type MODOS_DISPLAYS is (PWM, TEMP_CELSIUS, TEMP_MV);
     signal modo_displays : MODOS_DISPLAYS := TEMP_CELSIUS;
 
@@ -52,6 +52,9 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
     signal info_displays_activa : t_bus_info_displays;
 
     signal array_displays_out : t_displays_7seg;
+
+    -- CONTROL --
+    signal bus_registro_control : t_bus_control;
     
     begin
         ------------------------------------------------------------------
@@ -66,7 +69,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
             port map (
                 clk => clk_adc,
                 reset_n => reset_and_pll_n,
-                t_on => std_logic_vector(contador_pwm_manual),
+                t_on => std_logic_vector(t_on),
                 pwm_out => salida_digital_pwm
             );
 
@@ -111,6 +114,19 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
                 displays_hex_out => array_displays_out
             );
 
+        CONTROL_inst : entity work.CONTROL
+            generic map (
+                CLK_FREC => PLL_C0_FREC
+            )
+            port map (
+                clk => clk_adc,
+                reset_n => reset_and_pll_n,
+                bus_control_entrada => bus_registro_control,
+                bus_temperatura => bus_temperatura,
+                t_on => t_on
+            );
+
+
 
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
@@ -134,7 +150,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
                                     info_displays_celsius when TEMP_CELSIUS,
                                     info_displays_mv when others;
         
-        info_displays_pwm.valor_absoluto <= std_logic_vector(resize(contador_pwm_manual, 16));
+        info_displays_pwm.valor_absoluto <= std_logic_vector(resize(t_on, 16));
         info_displays_pwm.es_negativo <= false;
         info_displays_pwm.id <= x"0";
         info_displays_pwm.array_puntos_decimales <= "0000";
@@ -156,30 +172,32 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
         HEX4 <= array_displays_out(4);
         HEX5 <= array_displays_out(5);
 
+        -- PRUEBAS --
+        bus_registro_control.consigna <= to_signed(1200, N_BITS_CELSIUS);   -- 12 grados de consigna manual
 
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
         ------------------------------------------------------------------
-        process(clk_adc)
-        ------------------------------------------------------------------
-        -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
-        ------------------------------------------------------------------
+        -- process(clk_adc)
+        -- ------------------------------------------------------------------
+        -- -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
+        -- ------------------------------------------------------------------
             
-            begin           
-                if rising_edge(clk_adc) then
-                    if not reset_and_pll_n = '1' then
-                        contador_pwm_manual <= (others => '0'); 
-                    else
-                        if pulso_200hz = '1' then
-                            if not KEY(0) = '1' and contador_pwm_manual < 1023 then
-                                contador_pwm_manual <= contador_pwm_manual + 1;
-                            elsif not KEY(1) = '1' and contador_pwm_manual > 0 then
-                                contador_pwm_manual <= contador_pwm_manual - 1;
-                            end if;
-                        end if;
-                    end if;
-                end if;
-        end process;
+        --     begin           
+        --         if rising_edge(clk_adc) then
+        --             if not reset_and_pll_n = '1' then
+        --                 contador_pwm_manual <= (others => '0'); 
+        --             else
+        --                 if pulso_200hz = '1' then
+        --                     if not KEY(0) = '1' and contador_pwm_manual < 1023 then
+        --                         contador_pwm_manual <= contador_pwm_manual + 1;
+        --                     elsif not KEY(1) = '1' and contador_pwm_manual > 0 then
+        --                         contador_pwm_manual <= contador_pwm_manual - 1;
+        --                     end if;
+        --                 end if;
+        --             end if;
+        --         end if;
+        -- end process;
 
     
         

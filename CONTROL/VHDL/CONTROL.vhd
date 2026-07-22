@@ -17,8 +17,12 @@ entity CONTROL is
     );
     PORT(
         clk : in std_logic;
-        reset_n : in std_logic := '1'   -- conexion a reset activo a nivel bajo 
+        reset_n : in std_logic := '1';   -- conexion a reset activo a nivel bajo 
         
+        bus_control_entrada : in t_bus_control;
+        bus_temperatura : in t_bus_temperatura;
+
+        t_on : out unsigned(N_BITS_PWM-1 downto 0)
     );
 END entity;
 
@@ -32,7 +36,17 @@ architecture Behavioral of CONTROL is
         ------------------------------------------------------------------
         -- MAPEO DE ENTIDADES INTERNAS
         ------------------------------------------------------------------
-        
+        TODO_O_NADA_inst : entity work.TODO_O_NADA
+            port map (
+                clk => clk,
+                reset => not reset_n,
+
+                temp_actual => bus_temperatura.centesimas_centigrado,
+                consigna => bus_control_entrada.consigna,
+
+                t_on => t_on
+            );
+
 
 
         
