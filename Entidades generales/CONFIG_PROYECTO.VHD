@@ -33,13 +33,15 @@ package CONFIG_PROYECTO is
     
                                           
                                           
-    -- BUSES
+    -- BUSES Y ARRAYS
     type t_bus_temperatura is record
         bit_signo    :  std_logic;
         bcd_decenas  :  std_logic_vector(3 downto 0);
         bcd_unidades :  std_logic_vector(3 downto 0);
         bcd_decimas  :  std_logic_vector(3 downto 0);
         milivoltios           :  std_logic_vector(12 downto 0);
+
+        -- 16 bits para poder representar todo el rango de temperatura de 0 a 5000 mV
         centesimas_centigrado :  signed(15 downto 0);
         
     end record;
@@ -59,6 +61,13 @@ package CONFIG_PROYECTO is
 
     -- Array de displays 7 segmentos
     type t_displays_7seg is array (0 to 5) of std_logic_vector(7 downto 0);
+
+    type t_bus_info_displays is record
+        valor_absoluto         : std_logic_vector(15 downto 0);
+        es_negativo            : boolean;
+        id                     : std_logic_vector(3 downto 0);
+        array_puntos_decimales : std_logic_vector(3 downto 0);   -- 9.9.9.9. -> "1111"
+    end record;
 
     
 

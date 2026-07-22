@@ -28,23 +28,30 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
     ------------------------------------------------------------------
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
+
     -- PWM --
     signal salida_digital_pwm : std_logic := '0';
-    signal pulso_200hz : std_logic := '0';
+    signal pulso_200hz : std_logic := '0';  -- para ajustar el PWM manualmente
     signal contador_pwm_manual : UNSIGNED(N_BITS_PWM-1 downto 0) := (others => '0');   -- 0 a 1023
-    signal pwm_bcd : t_bus_bcd;
-    signal array_displays_pwm : t_displays_7seg;
     
+
     -- ADQUISICION --
     signal clk_adc : std_logic; -- 25 MHz
     signal pll_locked : std_logic;
     signal reset_and_pll_n : std_logic;
     signal bus_temperatura : t_bus_temperatura;
-    signal array_displays_temp : t_displays_7seg;
+
+
+    -- GESTION DE DISPLAYS
+    type MODOS_DISPLAYS is (PWM, TEMP_CELSIUS, TEMP_MV);
+    signal modo_displays : MODOS_DISPLAYS := TEMP_CELSIUS;
+
+    signal info_displays_pwm : t_bus_info_displays;
+    signal info_displays_celsius : t_bus_info_displays;
+    signal info_displays_mv : t_bus_info_displays;
+    signal info_displays_activa : t_bus_info_displays;
 
     signal array_displays_out : t_displays_7seg;
-    signal displays_temp_or_pwm : std_logic := '0';
-    signal displays_cent_or_mv : std_logic := '0';
     
     begin
         ------------------------------------------------------------------
@@ -74,42 +81,30 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
                 PULSE => pulso_200hz
             );
 
-        BIN2BCD_9999_inst : entity work.BIN2BCD_9999
-            generic map (
-                n_bits => N_BITS_PWM
-            )
-            port map (
-                BIN => std_logic_vector(contador_pwm_manual),
-                BCD0 => pwm_bcd.bcd0,
-                BCD1 => pwm_bcd.bcd1,
-                BCD2 => pwm_bcd.bcd2,
-                BCD3 => pwm_bcd.bcd3
-            );
-        
-        D0 : entity work.DISPLAY
-            generic map (BCD => true) port map (pwm_bcd.bcd0, array_displays_pwm(0));
-
-        D1 : entity work.DISPLAY
-            generic map (BCD => true) port map (pwm_bcd.bcd1, array_displays_pwm(1));
-
-        D2 : entity work.DISPLAY
-            generic map (BCD => true) port map (pwm_bcd.bcd2, array_displays_pwm(2));
-
-        D3 : entity work.DISPLAY
-            generic map (BCD => true) port map (pwm_bcd.bcd3, array_displays_pwm(3));
-
         ADQUISICION_DE_DATOS_inst : entity work.ADQUISICION_DE_DATOS
             port map (
                 clk_50 => MAX10_CLK1_50,
                 reset_n => ARDUINO_RESET_N,
 
-                modo_displays => displays_cent_or_mv,
+                modo_displays => '0',  -- se puede eliminar...
 
                 clk_adc => clk_adc,
                 pll_locked_out => pll_locked,
 
                 bus_temperatura => bus_temperatura,
-                displays_out => array_displays_temp
+
+                -- se puede eliminar, el modulo ya no necesita gestionar señales de displays internamente
+                -- porque lo hacemos desde top. Eso si, habria que modificar TOP_LEVEL_ENTITY_ADC porque dejaria de funcionar
+                displays_out => open
+            );
+
+        GESTION_DISPLAYS_inst : entity work.GESTION_DISPLAYS
+            port map (
+                valor_absoluto => info_displays_activa.valor_absoluto,
+                es_negativo => info_displays_activa.es_negativo,
+                id => info_displays_activa.id,
+                array_puntos_decimales => info_displays_activa.array_puntos_decimales,
+                displays_hex_out => array_displays_out
             );
 
 
@@ -124,13 +119,32 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
         LEDR(8) <= '1'; -- led al maximo como referencia
         LEDR(9) <= salida_digital_pwm;  -- led regulado por el mismo pwm
 
-        array_displays_pwm(4) <= (others => '1');
-        array_displays_pwm(5) <= (others => '1');
+        with SW(1 downto 0) select
+            modo_displays <= PWM          when "01",
+                             PWM          when "11",
+                             TEMP_CELSIUS when "00",
+                             TEMP_MV      when "10";
 
-        displays_temp_or_pwm <= SW(0);
-        displays_cent_or_mv <= SW(1);
+        with modo_displays select
+            info_displays_activa <= info_displays_pwm when PWM,
+                                    info_displays_celsius when TEMP_CELSIUS,
+                                    info_displays_mv when others;
+        
+        info_displays_pwm.valor_absoluto <= std_logic_vector(resize(contador_pwm_manual, 16));
+        info_displays_pwm.es_negativo <= false;
+        info_displays_pwm.id <= x"0";
+        info_displays_pwm.array_puntos_decimales <= "0000";
 
-        array_displays_out <= array_displays_temp when displays_temp_or_pwm = '0' else array_displays_pwm;
+        info_displays_celsius.valor_absoluto <= std_logic_vector(abs(bus_temperatura.centesimas_centigrado));
+        info_displays_celsius.es_negativo <= (bus_temperatura.centesimas_centigrado(15) = '1');
+        info_displays_celsius.id <= x"1";
+        info_displays_celsius.array_puntos_decimales <= "0100";
+
+        info_displays_mv.valor_absoluto <= std_logic_vector(resize(unsigned(bus_temperatura.milivoltios), 16));
+        info_displays_mv.es_negativo <= false;
+        info_displays_mv.id <= x"2";
+        info_displays_mv.array_puntos_decimales <= "1000";
+
         HEX0 <= array_displays_out(0);
         HEX1 <= array_displays_out(1);
         HEX2 <= array_displays_out(2);
