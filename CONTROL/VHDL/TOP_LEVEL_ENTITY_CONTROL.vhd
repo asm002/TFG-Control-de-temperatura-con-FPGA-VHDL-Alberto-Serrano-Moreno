@@ -99,6 +99,9 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
             );
 
         GESTION_DISPLAYS_inst : entity work.GESTION_DISPLAYS
+            generic map(
+                N_BITS_VALOR_ABSOLUTO => 16
+            )
             port map (
                 valor_absoluto => info_displays_activa.valor_absoluto,
                 es_negativo => info_displays_activa.es_negativo,
@@ -136,7 +139,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
         info_displays_pwm.array_puntos_decimales <= "0000";
 
         info_displays_celsius.valor_absoluto <= std_logic_vector(abs(bus_temperatura.centesimas_centigrado));
-        info_displays_celsius.es_negativo <= (bus_temperatura.centesimas_centigrado(15) = '1');
+        info_displays_celsius.es_negativo <= (bus_temperatura.bit_signo = '1');
         info_displays_celsius.id <= x"1";
         info_displays_celsius.array_puntos_decimales <= "0100";
 
@@ -156,13 +159,13 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
         ------------------------------------------------------------------
-        process(MAX10_CLK1_50)
+        process(clk_adc)
         ------------------------------------------------------------------
         -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
         ------------------------------------------------------------------
             
             begin           
-                if rising_edge(MAX10_CLK1_50) then
+                if rising_edge(clk_adc) then
                     if not reset_and_pll_n = '1' then
                         contador_pwm_manual <= (others => '0'); 
                     else

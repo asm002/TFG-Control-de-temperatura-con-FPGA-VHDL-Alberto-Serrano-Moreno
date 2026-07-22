@@ -582,7 +582,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO12
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO13
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO14
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO15
-set_global_assignment -name VHDL_FILE VHDL/GESTION_DISPLAYS.vhd
+set_global_assignment -name VHDL_FILE "../Entidades generales/GESTION_DISPLAYS.vhd"
 set_global_assignment -name QIP_FILE "../ADQUISICION DE DATOS/ADC_IP/synthesis/ADC_IP.qip"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/PLL_IP.vhd"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/mV_A_TEMP.vhd"

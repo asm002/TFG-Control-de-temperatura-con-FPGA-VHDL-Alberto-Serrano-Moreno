@@ -5,10 +5,11 @@ use IEEE.numeric_std.all;
 use work.CONFIG_PROYECTO.all;
 
 entity GESTION_DISPLAYS is
-    -- generic(
-    --     );
+    generic(
+        N_BITS_VALOR_ABSOLUTO : integer
+        );
     port(
-        valor_absoluto : in std_logic_vector(15 downto 0);  -- de 0000 a 9999
+        valor_absoluto : in std_logic_vector(N_BITS_VALOR_ABSOLUTO-1 downto 0);  -- de 0000 a 9999
         es_negativo : in boolean;
         id : in std_logic_vector(3 downto 0);
         array_puntos_decimales : in std_logic_vector(3 downto 0);   -- 9.9.9.9. -> "1111"
@@ -20,7 +21,6 @@ architecture Behavioral of GESTION_DISPLAYS is
     ------------------------------------------------------------------
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
-    constant N_BITS_V_ABSOLUTO : integer := 16;
     signal bus_bcd : t_bus_bcd;
     
     begin
@@ -29,7 +29,7 @@ architecture Behavioral of GESTION_DISPLAYS is
         ------------------------------------------------------------------
         BIN2BCD_9999_inst : entity work.BIN2BCD_9999
             generic map (
-                n_bits => N_BITS_V_ABSOLUTO
+                n_bits => N_BITS_VALOR_ABSOLUTO
             )
             port map (
                 BIN => valor_absoluto,
