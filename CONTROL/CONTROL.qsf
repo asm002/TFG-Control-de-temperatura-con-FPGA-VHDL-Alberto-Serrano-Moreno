@@ -582,7 +582,6 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO12
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO13
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO14
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO15
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_global_assignment -name VHDL_FILE ../COMUNICACIONES/VHDL/UART_TX.vhd
 set_global_assignment -name VHDL_FILE ../COMUNICACIONES/VHDL/UART_RX.vhd
 set_global_assignment -name VHDL_FILE ../COMUNICACIONES/VHDL/SECUENCIADOR.vhd
@@ -607,3 +606,4 @@ set_global_assignment -name VHDL_FILE ../PWM/VHDL/PWM.vhd
 set_global_assignment -name VHDL_FILE "../Entidades generales/CONFIG_PROYECTO.VHD"
 set_global_assignment -name VHDL_FILE VHDL/TOP_LEVEL_ENTITY_CONTROL.vhd
 set_global_assignment -name VHDL_FILE VHDL/CONTROL.vhd
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

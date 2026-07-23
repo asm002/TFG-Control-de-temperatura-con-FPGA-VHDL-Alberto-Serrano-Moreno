@@ -32,7 +32,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
     -- PWM --
     signal salida_digital_pwm : std_logic := '0';
     signal pulso_200hz : std_logic := '0';  -- para ajustar el PWM manualmente
-    signal t_on : UNSIGNED(N_BITS_PWM-1 downto 0) := (others => '0');   -- 0 a 1023
+    signal pwm_t_on : UNSIGNED(N_BITS_PWM-1 downto 0) := (others => '0');   -- 0 a 1023
     
 
     -- ADQUISICION --
@@ -53,8 +53,10 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
 
     signal array_displays_out : t_displays_7seg;
 
-    -- CONTROL --
-    signal bus_registro_control : t_bus_control;
+    -- CONTROL Y COMUNICACIONES --
+    signal bus_datos_graficos_tx : t_bus_datos_graficos_tx;
+    signal bus_control_data_rx : t_bus_control_data_rx;
+    signal modo_valid, pid_valid, pwm_valid : std_logic;
     
     begin
         ------------------------------------------------------------------
@@ -69,7 +71,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
             port map (
                 clk => clk_adc,
                 reset_n => reset_and_pll_n,
-                t_on => std_logic_vector(t_on),
+                t_on => std_logic_vector(pwm_t_on),
                 pwm_out => salida_digital_pwm
             );
 
@@ -114,6 +116,32 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
                 displays_hex_out => array_displays_out
             );
 
+        COMUNICACIONES_inst : entity work.COMUNICACIONES
+            generic map (
+                CLK_FREQ => PLL_C0_FREC,
+                BAUD_FREQ => BAUD_FREC,
+                MSG_FREQ => MSG_FREC
+            )
+            port map (
+                clk => clk_adc,
+                reset_n => reset_and_pll_n,
+
+                -- Pines de comunicacion (convertidor puerto serie)
+                uart_tx => ARDUINO_IO(PIN_TX),
+                uart_rx => ARDUINO_IO(PIN_RX),
+                uart_tx_echo => ARDUINO_IO(PIN_TX_ECHO),
+
+                -- Datos desde los registros de CONTROL (Para enviar por TX) --
+                bus_datos_graficos => bus_datos_graficos_tx,
+
+                -- Datos para CONTROL (Recibidos por RX) --
+                bus_control_data_rx => bus_control_data_rx,
+                modo_valid => modo_valid,
+                pwm_valid => pwm_valid,
+                pid_valid => pid_valid
+            );
+
+
         CONTROL_inst : entity work.CONTROL
             generic map (
                 CLK_FREC => PLL_C0_FREC
@@ -121,11 +149,22 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
             port map (
                 clk => clk_adc,
                 reset_n => reset_and_pll_n,
-                bus_control_entrada => bus_registro_control,
-                bus_temperatura => bus_temperatura,
-                t_on => t_on
-            );
 
+                -- Datos de adquisición
+                bus_temperatura => bus_temperatura,
+
+                -- Datos del parser (COMUNICACIONES RX)
+                bus_control_data_rx => bus_control_data_rx,
+                modo_valid => modo_valid,
+                pwm_valid => pwm_valid,
+                pid_valid => pid_valid,
+
+                -- DATOS PARA ENVIAR (COMUNICACIONES TX)
+                bus_datos_graficos_tx => bus_datos_graficos_tx,
+
+                -- SALIDA AL MÓDULO PWM (Conectar a t_on en TOP)
+                pwm_t_on => pwm_t_on
+            );
 
 
         ------------------------------------------------------------------
@@ -150,7 +189,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
                                     info_displays_celsius when TEMP_CELSIUS,
                                     info_displays_mv when others;
         
-        info_displays_pwm.valor_absoluto <= std_logic_vector(resize(t_on, 16));
+        info_displays_pwm.valor_absoluto <= std_logic_vector(resize(pwm_t_on, 16));
         info_displays_pwm.es_negativo <= false;
         info_displays_pwm.id <= x"0";
         info_displays_pwm.array_puntos_decimales <= "0000";
@@ -173,7 +212,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
         HEX5 <= array_displays_out(5);
 
         -- PRUEBAS --
-        bus_registro_control.consigna <= to_signed(1200, N_BITS_CELSIUS);   -- 12 grados de consigna manual
+        --bus_registro_control.consigna <= to_signed(1200, N_BITS_CELSIUS);   -- 12 grados de consigna manual
 
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
