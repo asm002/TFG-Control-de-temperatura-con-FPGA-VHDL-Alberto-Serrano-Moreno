@@ -14,8 +14,8 @@ package CONFIG_PROYECTO is
     constant FREC_PWM : integer := 500;
 
     -- Pines
-    constant PIN_TX : integer := 15;    -- pin del bus ARDUINO_IO
-    constant PIN_RX : integer := 14;    -- pin del bus ARDUINO_IO
+    constant PIN_TX : integer := 15;    -- pin del bus ARDUINO_IO (BLANCO)
+    constant PIN_RX : integer := 14;    -- pin del bus ARDUINO_IO (VERDE)
     constant PIN_TX_ECHO : integer := 13; -- pin de eco, donde se manda 
                                           -- lo mismo que se recibe
     constant PIN_PWM : integer := 12;
@@ -28,14 +28,14 @@ package CONFIG_PROYECTO is
     constant N_BITS_PWM : integer := 10;
     constant V_TIEMPO_MEDIA_MOVIL : integer := 20;  -- ventana de tiempo en milisegundos
 
-    constant MSG_N_BYTES_TX : integer := 29; -- CUIDADO: debe coincidir con el tamaño
+    constant MSG_N_BYTES_TX : integer := 30; -- CUIDADO: debe coincidir con el tamaño
                                              -- de indice dentro de MENSAJE_TX.
                                              -- No se puede modificar sin modificar la
                                              -- arquitectura de MENSAJE_TX
 
     constant N_BYTES_BUFFER_RX : integer := 64;  -- debe ser >= al numero maximo de 
                                                  -- bytes que podrá enviar el PC
-    
+    constant N_BITS_PID : integer := 16;
     
     
     ---- BUSES Y ARRAYS ----
@@ -51,13 +51,23 @@ package CONFIG_PROYECTO is
         
     end record;
 
-    type t_bus_control is record
+    -- kp, ki, kd, consigna... pueden representarse con menos de 16 bits (0000 a 9999 ó -9999 a +9999)
+    -- pero usamos 16 bits en todos por tener los mismos anchos de bus en todos y que
+    -- además coincida con el tamaño de la temperatura celsius
+    type t_bus_control_data_rx is record
         modo                  : std_logic;  -- '0' -> lazo abierto ; '1' -> lazo cerrado
         pwm_lazo_abierto      : std_logic_vector(N_BITS_PWM-1 downto 0);   -- 0 a 1023
-        kp                    : std_logic_vector(15 downto 0);  -- 0.00 a 99.99
-        ki                    : std_logic_vector(15 downto 0);  -- 0.00 a 99.99
-        kd                    : std_logic_vector(15 downto 0);  -- 0.00 a 99.99
+        kp                    : std_logic_vector(N_BITS_PID-1 downto 0);  -- 0.00 a 99.99
+        ki                    : std_logic_vector(N_BITS_PID-1 downto 0);  -- 0.00 a 99.99
+        kd                    : std_logic_vector(N_BITS_PID-1 downto 0);  -- 0.00 a 99.99
         consigna              : signed(N_BITS_CELSIUS-1 downto 0);  -- -99.90 a +99.90
+    end record;
+
+    type t_bus_datos_graficos_tx is record
+        consigna        : signed(N_BITS_CELSIUS-1 downto 0);  -- -99.90 a +99.90 
+        bus_temperatura : t_bus_temperatura;
+        error           : signed(N_BITS_CELSIUS-1 downto 0);  -- -199.8 a +199.8
+        pwm             : std_logic_vector(N_BITS_PWM-1 downto 0);   -- 0 a 1023
     end record;
 
     type t_bus_bcd is record

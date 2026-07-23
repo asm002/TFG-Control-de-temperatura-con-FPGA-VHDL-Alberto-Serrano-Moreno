@@ -37,6 +37,12 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
     
     signal bus_temperatura : t_bus_temperatura;
     signal bus_displays : t_displays_7seg;
+
+    signal bus_datos_graficos : t_bus_datos_graficos_tx;
+    signal bus_control_data_rx : t_bus_control_data_rx;
+    signal modo_valid, pwm_valid, pid_valid : std_logic := '0';
+    signal consigna_reg : signed(N_BITS_CELSIUS-1 downto 0);
+    signal pwm_reg      : std_logic_vector(N_BITS_PWM-1 downto 0);
     
     begin
         ------------------------------------------------------------------
@@ -55,10 +61,17 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
                 uart_tx => ARDUINO_IO(PIN_TX),
                 uart_rx => ARDUINO_IO(PIN_RX),
                 uart_tx_echo => ARDUINO_IO(PIN_TX_ECHO),
-                                
-                bus_temperatura => bus_temperatura
                 
+                -- DATOS DESDE OTRAS AREAS (Para enviar por TX) --
+                bus_datos_graficos => bus_datos_graficos,
+                
+                -- DATOS HACIA OTRAS AREAS (Recibidos por RX) --
+                bus_control_data_rx => bus_control_data_rx,
+                modo_valid => modo_valid,
+                pwm_valid => pwm_valid,
+                pid_valid => pid_valid
             );
+
             
         ADQUISICION : entity work.ADQUISICION_DE_DATOS
             port map(
@@ -91,7 +104,44 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
         HEX3 <= bus_displays(3);
         HEX4 <= bus_displays(4);
         HEX5 <= bus_displays(5);
-
-    
         
+        -- Se simulan los datos que llegarian desde el area de control
+        -- bus_datos_graficos.consigna <= to_signed(2050, N_BITS_CELSIUS);
+        -- bus_datos_graficos.bus_temperatura <= bus_temperatura;
+        -- bus_datos_graficos.error <= (bus_datos_graficos.consigna - bus_temperatura.centesimas_centigrado);
+        -- bus_datos_graficos.pwm <= std_logic_vector(TO_UNSIGNED(512, N_BITS_PWM));
+
+        -- Conectamos los registros "espejo" al bus de transmision
+        bus_datos_graficos.consigna <= consigna_reg;
+        bus_datos_graficos.bus_temperatura <= bus_temperatura;
+        bus_datos_graficos.error <= (consigna_reg - bus_temperatura.centesimas_centigrado);
+        bus_datos_graficos.pwm <= pwm_reg;
+    
+        ------------------------------------------------------------------
+        -- LOGICA SECUENCIAL ; PROCESOS
+        ------------------------------------------------------------------
+        
+        -- proceso para simular lo que llega del modulo de control. Como no hay modulo de control,
+        -- se hace efecto espejo: lo que se recibe por RX (bus_control_data_rx), se manda (no todo)
+        -- por TX (bus_datos_graficos)
+        process(clk_adc, reset_and_pll_n)
+        begin
+            if reset_and_pll_n = '0' then
+                -- Valores por defecto al resetear
+                consigna_reg <= to_signed(2050, N_BITS_CELSIUS); 
+                pwm_reg <= std_logic_vector(TO_UNSIGNED(512, N_BITS_PWM));
+                
+            elsif rising_edge(clk_adc) then
+                -- Cuando llega un comando PID válido, actualizamos la consigna
+                if pid_valid = '1' then
+                    consigna_reg <= bus_control_data_rx.consigna;
+                end if;
+                
+                -- Cuando llega un comando PWM válido, actualizamos el ciclo de trabajo
+                if pwm_valid = '1' then
+                    pwm_reg <= bus_control_data_rx.pwm_lazo_abierto;
+                end if;
+            end if;
+        end process;
+
 end architecture;

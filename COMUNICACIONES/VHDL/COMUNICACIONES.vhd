@@ -24,10 +24,15 @@ entity COMUNICACIONES is
         uart_rx : in std_logic := '0';
         uart_tx_echo : out std_logic;
                 
-        -- DATOS DE OTRAS AREAS --
-        -- ADQUISICION:
-        bus_temperatura : in t_bus_temperatura
-        
+        -- DATOS DESDE OTRAS AREAS (Para enviar por TX) --
+        bus_datos_graficos : in t_bus_datos_graficos_tx;
+
+        -- DATOS HACIA OTRAS AREAS (Recibidos por RX) --
+        bus_control_data_rx : out t_bus_control_data_rx;
+        modo_valid          : out std_logic;
+        pwm_valid           : out std_logic;
+        pid_valid           : out std_logic
+
     );
 END entity;
 
@@ -53,8 +58,8 @@ architecture Behavioral of COMUNICACIONES is
     signal s_rx_indice_buffer_out_byte : integer range 0 to N_BYTES_BUFFER_RX-1;
     signal s_rx_buffer_out_byte : std_logic_vector(7 downto 0);
 
-    signal control_data_rx : t_bus_control;
-    signal s_modo_valid, s_pwm_valid, s_pid_valid : std_logic;
+    -- signal control_data_rx : t_bus_control_data_rx;
+    -- signal s_modo_valid, s_pwm_valid, s_pid_valid : std_logic;
     
     begin
         ------------------------------------------------------------------
@@ -99,8 +104,7 @@ architecture Behavioral of COMUNICACIONES is
                 indice => msg_byte_indice,
                 byte_out => msg_byte,
                 
-                bus_temperatura => bus_temperatura,
-                bus_control => control_data_rx -- CAMBIAR!!! Ha servido para probar,
+                bus_datos_graficos => bus_datos_graficos -- [LISTO] CAMBIAR!!! Ha servido para probar,
                 -- pero los datos de control que se envian al pc no deben provenir
                 -- directamente de la lectura del puerto serie, 
                 -- sino del registro del modulo de control cuando esté hecho
@@ -177,10 +181,10 @@ architecture Behavioral of COMUNICACIONES is
                 liberar_buffer => s_rx_liberar_buffer,
 
                 -- INTERFAZ CON EL SISTEMA DE CONTROL
-                control_rx => control_data_rx,
-                modo_valid => s_modo_valid,
-                pwm_valid => s_pwm_valid,
-                pid_valid => s_pid_valid
+                control_rx => bus_control_data_rx,
+                modo_valid => modo_valid,
+                pwm_valid => pwm_valid,
+                pid_valid => pid_valid
             );
 
 

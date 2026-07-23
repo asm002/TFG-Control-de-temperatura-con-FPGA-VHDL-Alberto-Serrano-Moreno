@@ -24,7 +24,7 @@ entity PARSER_ASCII_RX is
 
 
         -- INTERFAZ CON EL SISTEMA DE CONTROL
-        control_rx     : out t_bus_control;  -- bus con todas las señales leidas 
+        control_rx     : out t_bus_control_data_rx;  -- bus con todas las señales leidas 
         
         -- pulsos de habilitación (1 ciclo de reloj) para indicar qué dato es válido
         modo_valid      : out std_logic; 
@@ -60,9 +60,9 @@ architecture Behavioral of PARSER_ASCII_RX is
     signal indice_pid    : integer range 0 to 3 := 0;
 
     -- Registro de salidas
-    signal reg_out : t_bus_control := (
+    signal reg_out : t_bus_control_data_rx := (
         modo => '0', 
-        pwm => (others => '0'), 
+        pwm_lazo_abierto => (others => '0'), 
         kp => (others => '0'), 
         ki => (others => '0'), 
         kd => (others => '0'), 
@@ -203,7 +203,7 @@ architecture Behavioral of PARSER_ASCII_RX is
                             end if;
                             
                         elsif comando_actual = CMD_PWM then
-                            reg_out.pwm <= std_logic_vector(to_unsigned(valor, 10));
+                            reg_out.pwm_lazo_abierto <= std_logic_vector(to_unsigned(valor, 10));
                             
                         elsif comando_actual = CMD_PID then
                             case indice_pid is
