@@ -20,6 +20,7 @@ entity COMUNICACIONES is
         clk : in std_logic;
         reset_n : in std_logic := '0';   -- conexion a reset activo a nivel bajo 
         
+        -- Pines de comunicacion (convertidor puerto serie)
         uart_tx : out std_logic;
         uart_rx : in std_logic := '0';
         uart_tx_echo : out std_logic;
