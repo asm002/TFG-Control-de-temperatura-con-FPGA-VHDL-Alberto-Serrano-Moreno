@@ -2,29 +2,31 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-entity mV_A_TEMP is
+use work.CONFIG_PROYECTO.all;
+
+entity MV_A_TEMP is
     PORT(
-        mv : in std_logic_vector(12 downto 0);
-        conversion_centesimas_gradoC : out signed(15 downto 0)
+        mv : in std_logic_vector(N_BITS_MILIVOLTIOS-1 downto 0);
+        centesimas_celsius : out signed(N_BITS_CELSIUS-1 downto 0)
     );
 END entity;
 
-architecture Behavioral of mV_A_TEMP is
+architecture Behavioral of MV_A_TEMP is
     ------------------------------------------------------------------
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
-    constant N_BITS_mV : integer := 13;     -- bits necesarios para representar la
-                                            -- tension de referencia en mV 
-                                            -- (por ejemplo, 5000)
-    constant N_BITS_TEMP : integer := 16;
+    constant N_BITS_mV : integer := N_BITS_MILIVOLTIOS; -- bits necesarios para representar la
+                                                        -- tension de referencia en mV 
+                                                        -- (por ejemplo, 5000)
+    constant N_BITS_TEMP : integer := N_BITS_CELSIUS;
     
     -- producto de dos datos de 14 y 5 bits -> 19 BITS
     constant N_BITS_mv_ESCALADO : integer := N_BITS_mV + 1 + 5;
     constant N_BITS_RESTA : integer := N_BITS_mv_ESCALADO;
 
     
-    signal RESTA : signed(N_BITS_RESTA-1 downto 0);
-    signal mv_ESCALADO : signed(N_BITS_mv_ESCALADO-1 downto 0);
+    signal resta : signed(N_BITS_RESTA-1 downto 0);
+    signal mv_escalado : signed(N_BITS_mv_ESCALADO-1 downto 0);
     
     begin
         ------------------------------------------------------------------
@@ -40,8 +42,8 @@ architecture Behavioral of mV_A_TEMP is
         --  (restando 2731.5)
         -- Para restar 2731.5, se multiplica todo por 10
         
-        mv_ESCALADO <= signed('0' & mv) * to_signed(10, 5);
-        RESTA <= mv_ESCALADO - to_signed(27315, N_BITS_mv_ESCALADO);
+        mv_escalado <= signed('0' & mv) * to_signed(10, 5);
+        resta <= mv_escalado - to_signed(27315, N_BITS_mv_ESCALADO);
         
         -- La señal RESTA obtiene la temperatura en centesimas de grado centigrado
         -- (25.45 C -> 02545)
@@ -50,7 +52,7 @@ architecture Behavioral of mV_A_TEMP is
         -- Para representar eso con signo: log2(27315) = 15 bits -> mas 1 bit de signo
         -- Con 16 bits podemos representar todo el rango
         -- fisicamente posible que puede leer el ADC
-        conversion_centesimas_gradoC <= resize(RESTA, N_BITS_TEMP);
+        centesimas_celsius <= resize(resta, N_BITS_TEMP);
         
         
 end architecture;

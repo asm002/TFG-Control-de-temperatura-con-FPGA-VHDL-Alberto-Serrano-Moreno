@@ -29,41 +29,140 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
     ------------------------------------------------------------------
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
-    signal bus_displays : t_displays_7seg;
+    signal clk_adc : std_logic;
+    signal bus_temperatura : t_bus_temperatura;
+
+    signal pll_locked, reset_and_pll_n : std_logic;
+
+    signal KEY_pulsos : std_logic_vector(1 downto 0);
+    signal avanzar, retroceder, ajustar : std_logic;
+
+    signal SW_sync : std_logic_vector(9 downto 0);
+
+    -- GESTION DE DISPLAYS --
+    constant N_PANTALLAS : integer := 2;
+    signal contador_pantallas : integer range 0 to N_PANTALLAS-1;
+
+    signal info_displays_mv : t_bus_info_displays;
+    signal info_displays_celsius : t_bus_info_displays;
+    signal info_displays_activa : t_bus_info_displays;
+
+    signal array_displays_out : t_displays_7seg;
     
     begin
         ------------------------------------------------------------------
         -- MAPEO DE ENTIDADES INTERNAS
         ------------------------------------------------------------------
-
         ADQUISICION_DE_DATOS0 : entity work.ADQUISICION_DE_DATOS
             port map (
                 clk_50 => MAX10_CLK1_50,
                 reset_n => ARDUINO_RESET_N,
-                modo_displays => SW(0),
-                clk_adc => open,  -- "open" en vhdl sirve para indicar 
-                                  -- de manera explicita que una señal
-                                  -- no se conecta a nada
-                pll_locked_out => open,
-                bus_temperatura => open,
-                displays_out => bus_displays
+
+                clk_adc => clk_adc,
+                pll_locked_out => pll_locked,
+                bus_temperatura => bus_temperatura
             );
+
+        GESTION_DISPLAYS0 : entity work.GESTION_DISPLAYS
+            generic map (
+                N_BITS_VALOR_ABSOLUTO => N_BITS_CELSIUS
+            )
+            port map (
+                valor_absoluto => info_displays_activa.valor_absoluto,
+                es_negativo => info_displays_activa.es_negativo,
+                id => info_displays_activa.id,
+                array_puntos_decimales => info_displays_activa.array_puntos_decimales,
+                displays_hex_out => array_displays_out
+            );
+        
+        CAPTURA_PULSADORES0 : entity work.CAPTURA_PULSADORES
+            generic map (
+                N_PULSADORES => 2
+            )
+            port map (
+                clk => clk_adc,
+                reset => not reset_and_pll_n,
+
+                pulsadores => not KEY,
+                pulsos => KEY_pulsos
+            );
+
+        SINCRONIZADOR_ENTRADAS0 : entity work.SINCRONIZADOR_ENTRADAS
+            generic map (
+                N_ENTRADAS => 10
+            )
+            port map (
+                clk => clk_adc,
+                reset => not reset_and_pll_n,
+
+                entradas => SW,
+                entradas_sincronizadas => SW_sync
+            );
+
 
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
-        
-        -- BUSES SALIDA
-        HEX0 <= bus_displays(0);
-        HEX1 <= bus_displays(1);
-        HEX2 <= bus_displays(2);
-        HEX3 <= bus_displays(3);
-        HEX4 <= bus_displays(4);
-        HEX5 <= bus_displays(5);
+        reset_and_pll_n <= ARDUINO_RESET_N and pll_locked;  -- reset de boton y ademas condicionado a que el pll
+                                                            -- esté listo. Activo a nivel bajo
+        avanzar <= KEY_pulsos(0);
+        retroceder <= KEY_pulsos(1);
+        ajustar <= SW_sync(0);
+
+        -- GESTION DISPLAYS
+        info_displays_celsius.valor_absoluto <= std_logic_vector(abs(bus_temperatura.centesimas_celsius));
+        info_displays_celsius.es_negativo <= bus_temperatura.centesimas_celsius(N_BITS_CELSIUS-1) = '1';
+        info_displays_celsius.id <= std_logic_vector(to_unsigned(contador_pantallas, 4));
+        info_displays_celsius.array_puntos_decimales <= "0100";
+
+        info_displays_mv.valor_absoluto <= std_logic_vector(resize(unsigned(bus_temperatura.milivoltios), 16));
+        info_displays_mv.es_negativo <= false;
+        info_displays_mv.id <= std_logic_vector(to_unsigned(contador_pantallas, 4));
+        info_displays_mv.array_puntos_decimales <= "1000";
+
+        HEX0 <= array_displays_out(0);
+        HEX1 <= array_displays_out(1);
+        HEX2 <= array_displays_out(2);
+        HEX3 <= array_displays_out(3);
+        HEX4 <= array_displays_out(4);
+        HEX5 <= array_displays_out(5);
+
+        with contador_pantallas select info_displays_activa <= 
+            info_displays_celsius when 0,
+            info_displays_mv      when 1,
+            info_displays_celsius when others;
+
         
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
         ------------------------------------------------------------------
+        process(clk_adc)
+        ------------------------------------------------------------------
+        -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
+        ------------------------------------------------------------------
+            
+            begin           
+                if rising_edge(clk_adc) then
+                    if reset_and_pll_n = '0' then
+                        
+                    else
+                        if avanzar = '1' then
+                            if contador_pantallas = N_PANTALLAS - 1 then
+                                contador_pantallas <= 0;
+                            else
+                                contador_pantallas <= contador_pantallas + 1;
+                            end if;
+
+                        elsif retroceder = '1' then
+                            if contador_pantallas = 0 then
+                                contador_pantallas <= N_PANTALLAS - 1;
+                            else
+                                contador_pantallas <= contador_pantallas - 1;
+                            end if;
+                        end if;
+                    end if;
+                end if;
+        end process;
         
         
 end architecture;

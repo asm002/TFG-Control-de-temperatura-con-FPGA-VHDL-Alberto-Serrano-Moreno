@@ -24,6 +24,8 @@ package CONFIG_PROYECTO is
     constant N_BITS_CELSIUS : integer := 16;  -- hay que modificar adquisicion y comunicaciones
                                               -- para que la use
     constant N_BITS_MILIVOLTIOS : integer := 13; -- idem
+    constant N_BITS_ADC : integer := 12;
+    constant VREFmv : integer := 5000;  -- tension de referencia en milivoltios
     constant BITS_MUESTRAS_MEDIA_MOVIL : integer := 8;
     constant N_BITS_PWM : integer := 10;
     constant V_TIEMPO_MEDIA_MOVIL : integer := 20;  -- ventana de tiempo en milisegundos
@@ -40,14 +42,9 @@ package CONFIG_PROYECTO is
     
     ---- BUSES Y ARRAYS ----
     type t_bus_temperatura is record
-        bit_signo    :  std_logic;
-        bcd_decenas  :  std_logic_vector(3 downto 0);
-        bcd_unidades :  std_logic_vector(3 downto 0);
-        bcd_decimas  :  std_logic_vector(3 downto 0);
         milivoltios  :  std_logic_vector(N_BITS_MILIVOLTIOS-1 downto 0);
-
         -- 16 bits para poder representar todo el rango de temperatura de 0 a 5000 mV
-        centesimas_centigrado :  signed(N_BITS_CELSIUS-1 downto 0);
+        centesimas_celsius :  signed(N_BITS_CELSIUS-1 downto 0);
         
     end record;
 

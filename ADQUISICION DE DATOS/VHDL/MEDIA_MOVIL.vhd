@@ -22,16 +22,17 @@ entity MEDIA_MOVIL is
         CLK_FREC: integer := 25E6   -- frecuencia del reloj de entrada, en hercios
         );
     PORT(
-        CLK : in std_logic; -- reloj de entrada
-        RESET: in std_logic := '0'; -- reset activo a nivel alto
-        DATO_LISTO: in std_logic := '0';    -- se debe recibir un pulso cada vez que el 
+        clk : in std_logic; -- reloj de entrada
+        reset: in std_logic := '0'; -- reset activo a nivel alto
+        
+        dato_listo: in std_logic := '0';    -- se debe recibir un pulso cada vez que el 
                                             -- dato se haya actualizado, para registrar 
                                             -- una nueva muestra
                                             
-        DATO: in std_logic_vector(N_BITS_DATO-1 downto 0);   -- dato de entrada
+        dato: in std_logic_vector(N_BITS_DATO-1 downto 0);   -- dato de entrada
         
         -- dato de salida, promediado/filtrado
-        DATO_PROMEDIADO: out std_logic_vector(N_BITS_DATO-1 downto 0)
+        dato_promediado: out std_logic_vector(N_BITS_DATO-1 downto 0)
         );
 END entity;
 
@@ -67,8 +68,8 @@ architecture Behavioral of MEDIA_MOVIL is
                         PULSE_FREC => FRECUENCIA_MUESTREO
                         )
             port map(
-                     CLK => CLK,
-                     RESET => RESET,
+                     CLK => clk,
+                     RESET => reset,
                      PULSE => PULSE_FREC_MUESTREO_HZ
                     );
         
@@ -79,20 +80,20 @@ architecture Behavioral of MEDIA_MOVIL is
         -- SUMA(15 downto 4) para 12 bits y 16 muestras
         -- dividir entre NUM_MUESTRAS.
         -- Si es 16, equivale a quedarse con los BITS_SUMA-4 bits mas significativos
-        DATO_PROMEDIADO <= std_logic_vector(SUMA(BITS_SUMA-1 downto N_BITS_MUESTRAS));
+        dato_promediado <= std_logic_vector(SUMA(BITS_SUMA-1 downto N_BITS_MUESTRAS));
         
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
         ------------------------------------------------------------------
-        process(CLK)
+        process(clk)
             ------------------------------------------------------------------
         -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
         ------------------------------------------------------------------
             variable suma_var : unsigned(BITS_SUMA-1 downto 0) := (others=>'0');
             begin           
-                if rising_edge(CLK) then
+                if rising_edge(clk) then
                 
-                    if RESET = '1' then
+                    if reset = '1' then
                         
                         suma_var := (others => '0');
                         DATOS <= (others => (others => '0'));
@@ -107,7 +108,7 @@ architecture Behavioral of MEDIA_MOVIL is
                             
                         end if;
                         
-                        if DATO_LISTO = '1' and capturar_dato = true then
+                        if dato_listo = '1' and capturar_dato = true then
                         
                             -- desplazar los datos a la izquierda.
                             -- El nuevo dato entra a la posicion 0
@@ -116,7 +117,7 @@ architecture Behavioral of MEDIA_MOVIL is
                                 -- (mayor indice, a la izquierda del todo)
                                 DATOS(i) <= DATOS(i-1); 
                             end loop;
-                            DATOS(0) <= DATO;
+                            DATOS(0) <= dato;
                             
                             -- resize(dato, bits) automaticamente recorta o añade ceros
                             -- a la izquierda a un dato para que acabe siendo el tamaño
@@ -127,7 +128,7 @@ architecture Behavioral of MEDIA_MOVIL is
                             -- añadimos a la suma el dato nuevo y
                             -- restamos el mas antiguo (ultima posicion)
                             suma_var := suma_var
-                             + resize(unsigned(DATO), BITS_SUMA)
+                             + resize(unsigned(dato), BITS_SUMA)
                              - resize(unsigned(DATOS(NUM_MUESTRAS-1)), BITS_SUMA);
                             
                             SUMA <= suma_var;

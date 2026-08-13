@@ -14,16 +14,11 @@ entity ADQUISICION_DE_DATOS is
     PORT(
             clk_50 : in std_logic;  -- conexion al reloj de 50 Mhz
             reset_n : in std_logic;   -- conexion a reset (mucho cuidado, debe ser un reset de logica inversa, activo a nivel bajo)
-            
-            modo_displays : in std_logic;   --'0': temperatura ; '1': milivoltios
-            
+                        
             -- salidas de datos para otros modulos
             clk_adc : out std_logic;
             pll_locked_out : out std_logic; -- para mantener sistemas a reset hasta que el pll sea estable
-            
-            bus_temperatura : out t_bus_temperatura;
-            displays_out : out t_displays_7seg
-            
+            bus_temperatura : out t_bus_temperatura           
     );
 END entity;
 
@@ -33,36 +28,14 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
     
-    signal ADC_CLK : std_logic;
+    signal adc_clk : std_logic;
     
-    signal CH1: std_logic_vector(11 downto 0);
-    signal ADC_VALID: std_logic;
+    signal ch1: std_logic_vector(11 downto 0);
+    signal adc_valid: std_logic;
     
-    signal BCD0_mv : std_logic_vector(3 downto 0);
-    signal BCD1_mv : std_logic_vector(3 downto 0);
-    signal BCD2_mv : std_logic_vector(3 downto 0);
-    signal BCD3_mv : std_logic_vector(3 downto 0);
-    
-    signal BCD0_P : std_logic_vector(3 downto 0);
-    signal BCD1_P : std_logic_vector(3 downto 0);
-    signal BCD2_P : std_logic_vector(3 downto 0);
-    signal BCD3_P : std_logic_vector(3 downto 0);
-    
-    signal BCD0_cc : std_logic_vector(3 downto 0);
-    signal BCD1_cc : std_logic_vector(3 downto 0);
-    signal BCD2_cc : std_logic_vector(3 downto 0);
-    signal BCD3_cc : std_logic_vector(3 downto 0);
-    
-    signal DP_H1 : std_logic;
-    signal D7SEG_H3 : std_logic_vector (7 downto 0);
-    
-    signal s_temp_milivoltios : std_logic_vector(12 downto 0);
-    signal s_temp_centesimas_centigrado : signed(15 downto 0);
-    signal temp_centesimas_absoluta : std_logic_vector(15 downto 0);
-    signal temperatura_negativa : std_logic := '0'; -- '0' positiva; '1' negativa
-    
-    signal CH1_PROMEDIADO: std_logic_vector(11 downto 0);
-    signal PULSE_4HZ : std_logic := '0';
+    signal ch1_milivoltios : std_logic_vector(12 downto 0);
+    signal ch1_centesimas_celsius : signed(15 downto 0);
+    signal ch1_filtrado: std_logic_vector(11 downto 0);
     
     signal pll_locked : std_logic;
     
@@ -74,10 +47,10 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
         ADC_DRIVER0 : entity work.ADC_DRIVER
             port map(
                         clk_in => clk_50,
-                        pll_c0_clk => ADC_CLK,
+                        pll_c0_clk => adc_clk,
                         reset_n => reset_n,
-                        ch1_data => CH1,
-                        adc_valid => ADC_VALID,
+                        ch1_data => ch1,
+                        adc_valid => adc_valid,
                         pll_locked_out => pll_locked
                         
                         );
@@ -88,106 +61,49 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
                                             VENTANA_TIEMPO_MS => V_TIEMPO_MEDIA_MOVIL,
                                             CLK_FREC => PLL_C0_FREC)
                             port map(
-                                        CLK => ADC_CLK,
-                                        RESET => not reset_n, 
-                                        DATO_LISTO => ADC_VALID,
-                                        DATO => CH1,
-                                        DATO_PROMEDIADO => CH1_PROMEDIADO);
-                                        
-        GENERADOR_PULSOS_4HZ :  entity work.GENERADOR_PULSOS
-                                        generic map(CLK_FREC => PLL_C0_FREC, PULSE_FREC => 4)
-                                        port map(
-                                                CLK => ADC_CLK,
-                                                RESET => not reset_n,
-                                                PULSE => PULSE_4HZ
-                                                );
+                                        clk => adc_clk,
+                                        reset => not reset_n, 
+                                        dato_listo => adc_valid,
+                                        dato => ch1,
+                                        dato_promediado => ch1_filtrado);
                                                 
-        CONVERSOR_A_mV :    entity work.ADC_A_mV
+        ADC_A_MV0 :    entity work.ADC_A_MV
+                                generic map(
+                                    N_BITS_ADC => N_BITS_ADC
+                                )
                                 port map(
-                                            cuentas_ADC => CH1_PROMEDIADO,
-                                            conversion_mv => s_temp_milivoltios
+                                            cuentas_ADC => ch1_filtrado,
+                                            conversion_mv => ch1_milivoltios
                                             );
                                             
-        CONVERSOR_A_cC :    entity work.mV_A_TEMP
+        MV_A_TEMP0 :    entity work.MV_A_TEMP
                                 port map(
-                                            mv => s_temp_milivoltios,
-                                            conversion_centesimas_gradoC => s_temp_centesimas_centigrado);
+                                            mv => ch1_milivoltios,
+                                            centesimas_celsius => ch1_centesimas_celsius);
                                             
-        BIN2BCD_MILIVOLTIOS : entity work.BIN2BCD_9999 generic map(n_bits=>13) port map(s_temp_milivoltios, BCD0_mv, BCD1_mv, BCD2_mv, BCD3_mv);
-        BIN2BCD_CENTIGRADOS : entity work.BIN2BCD_9999 generic map(n_bits=>16) port map(temp_centesimas_absoluta, BCD0_cc, BCD1_cc, BCD2_cc, BCD3_cc);
-
-        
-        D0 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD0_P, D7SEG => displays_out(0), DP => '0');
-        D1 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD1_P, D7SEG => displays_out(1), DP => DP_H1);
-        D2 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD2_P, D7SEG => displays_out(2), DP => '0');
-        D3 : entity work.DISPLAY generic map(BCD => true) port map (BIN => BCD3_P, D7SEG => D7SEG_H3, DP => '1');
-        
-        D4 : entity work.DISPLAY generic map(BCD => true) port map (BIN => "0000", D7SEG => displays_out(4), OFF => '1');
-
         
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
-        
-        temp_centesimas_absoluta <= std_logic_vector(abs(s_temp_centesimas_centigrado));
-        
-        temperatura_negativa <= s_temp_centesimas_centigrado(15);   -- el ultimo bit es el de signo
-        
-        displays_out(5) <= "01000110" when modo_displays = '0' else "01000001";
-        
-        with std_logic_vector'(modo_displays & temperatura_negativa) select displays_out(3) <= 
-                    "10111111" when "01",     -- modo temperatura y es negativa -> mostrar signo menos
-                    "11111111" when "00",     -- modo temperatura y es positiva -> no signo menos, apagar display
-                    D7SEG_H3   when others;   -- modo tension -> dejar pasar los millares de milivoltio
-        
-        
-        DP_H1 <= '1' when modo_displays = '0' else '0'; -- punto decimal de disp1 ; para mostrar XX.X (grados)       
-        
+                                
         -- asignacion de salidas del modulo
-        bus_temperatura.milivoltios <= s_temp_milivoltios;
-        bus_temperatura.centesimas_centigrado <= s_temp_centesimas_centigrado;
+        bus_temperatura.milivoltios <= ch1_milivoltios;
+        bus_temperatura.centesimas_celsius <= ch1_centesimas_celsius;
         
-        clk_adc <= ADC_CLK;
+        clk_adc <= adc_clk;
         pll_locked_out <= pll_locked;
-        
-        bus_temperatura.bit_signo <= temperatura_negativa;
-        bus_temperatura.bcd_decenas <= BCD3_cc;
-        bus_temperatura.bcd_unidades <= BCD2_cc;
-        bus_temperatura.bcd_decimas <= BCD1_cc;
-        -- BCD0 son las centesimas, que vamos a ignorar porque
-        -- no son signficativas (resolucion termica de 0.1C)
         
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
         ------------------------------------------------------------------
         
-        process(ADC_CLK)
-            ------------------------------------------------------------------
-            -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
-            ------------------------------------------------------------------
+        -- process(ADC_CLK)
+        --     ------------------------------------------------------------------
+        --     -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
+        --     ------------------------------------------------------------------
             
-            begin           
-                if rising_edge(ADC_CLK) then
-                    
-                if PULSE_4HZ = '1' then
+        --     begin           
                 
-                    if modo_displays = '1' then
-                            -- MODO MILIVOLTIOS
-                            BCD0_P <= BCD0_mv;
-                            BCD1_P <= BCD1_mv;
-                            BCD2_P <= BCD2_mv;
-                            BCD3_P <= BCD3_mv;
-                        else
-                            -- MODO TEMPERATURA
-                            BCD0_P <= BCD1_cc;
-                            BCD1_P <= BCD2_cc;
-                            BCD2_P <= BCD3_cc;
-                            BCD3_P <= "0000";
-                        end if;
-                    
-                end if;
-                
-                end if;
-        end process;
+        -- end process;
         
 end architecture;
