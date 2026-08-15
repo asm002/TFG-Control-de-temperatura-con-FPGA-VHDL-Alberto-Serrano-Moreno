@@ -30,12 +30,12 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
     
     signal adc_clk : std_logic;
     
-    signal ch1: std_logic_vector(11 downto 0);
+    signal ch1: std_logic_vector(N_BITS_ADC-1 downto 0);
     signal adc_valid: std_logic;
     
-    signal ch1_milivoltios : std_logic_vector(12 downto 0);
-    signal ch1_centesimas_celsius : signed(15 downto 0);
-    signal ch1_filtrado: std_logic_vector(11 downto 0);
+    signal ch1_milivoltios : std_logic_vector(N_BITS_MILIVOLTIOS-1 downto 0);
+    signal ch1_centesimas_celsius : signed(N_BITS_CELSIUS-1 downto 0);
+    signal ch1_filtrado: std_logic_vector(N_BITS_ADC_OVERSAMPLING-1 downto 0);
     
     signal pll_locked : std_logic;
     
@@ -56,7 +56,7 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
                         );
                         
         MEDIA_MOVIL0 : entity work.MEDIA_MOVIL 
-                            generic map(N_BITS_DATO => 12, 
+                            generic map(N_BITS_DATO => N_BITS_ADC, 
                                             N_BITS_MUESTRAS => BITS_MUESTRAS_MEDIA_MOVIL,
                                             VENTANA_TIEMPO_MS => V_TIEMPO_MEDIA_MOVIL,
                                             CLK_FREC => PLL_C0_FREC)
@@ -69,17 +69,22 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
                                                 
         ADC_A_MV0 :    entity work.ADC_A_MV
                                 generic map(
-                                    N_BITS_ADC => N_BITS_ADC
+                                    N_BITS_ADC => N_BITS_ADC_OVERSAMPLING
                                 )
                                 port map(
-                                            cuentas_ADC => ch1_filtrado,
-                                            conversion_mv => ch1_milivoltios
+                                            cuentas_ADC => ch1_filtrado, -- señal de 16 bits de MEDIA_MOVIL
+                                            conversion_mv => ch1_milivoltios -- 13 bits (0 a 5000 mV)
                                             );
-                                            
-        MV_A_TEMP0 :    entity work.MV_A_TEMP
-                                port map(
-                                            mv => ch1_milivoltios,
-                                            centesimas_celsius => ch1_centesimas_celsius);
+
+        ADC_A_CELSIUS0 : entity work.ADC_A_CELSIUS
+            generic map (
+                N_BITS_ADC => N_BITS_ADC_OVERSAMPLING
+            )
+            port map (
+                cuentas_ADC => ch1_filtrado, -- señal de 16 bits de MEDIA_MOVIL
+                centesimas_celsius => ch1_centesimas_celsius -- 16 bits signed (ej: 2504 = 25.04 °C)
+            );
+
                                             
         
         ------------------------------------------------------------------
@@ -92,18 +97,5 @@ architecture Behavioral of ADQUISICION_DE_DATOS is
         
         clk_adc <= adc_clk;
         pll_locked_out <= pll_locked;
-        
-        ------------------------------------------------------------------
-        -- LOGICA SECUENCIAL ; PROCESOS
-        ------------------------------------------------------------------
-        
-        -- process(ADC_CLK)
-        --     ------------------------------------------------------------------
-        --     -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
-        --     ------------------------------------------------------------------
-            
-        --     begin           
-                
-        -- end process;
         
 end architecture;

@@ -1,3 +1,9 @@
+-- ADVERTENCIA!! : la mayoría de constantes que aquí aparecen NO son parámetros de libre configuración.
+-- Modificarlas requiere saber muy bien lo que se está haciendo y por lo general habrá que
+-- modificar los sistemas (señales, buses, lógica...) para acomodar el nuevo valor.
+-- El principal uso de este archivo es aglutinar todas las constantes aquí para verlas
+-- todas de un vistazo y además no repetir sus valores en cada módulo que las necesite
+
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
@@ -21,10 +27,11 @@ package CONFIG_PROYECTO is
     constant PIN_PWM : integer := 12;
 
     -- Dimensionado
-    constant N_BITS_CELSIUS : integer := 16;  -- hay que modificar adquisicion y comunicaciones
-                                              -- para que la use
-    constant N_BITS_MILIVOLTIOS : integer := 13; -- idem
     constant N_BITS_ADC : integer := 12;
+    -- la señal de cuentas del ADC gana bits gracias al oversampling
+    constant N_BITS_ADC_OVERSAMPLING : integer := 16;
+    constant N_BITS_CELSIUS : integer := 16; -- centésimas de grado C
+    constant N_BITS_MILIVOLTIOS : integer := 13;
     constant VREFmv : integer := 5000;  -- tension de referencia en milivoltios
     constant BITS_MUESTRAS_MEDIA_MOVIL : integer := 8;
     constant N_BITS_PWM : integer := 10;

@@ -6,7 +6,7 @@ use work.CONFIG_PROYECTO.all;
 
 entity ADC_A_mV is
     GENERIC(
-        N_BITS_ADC : integer  -- bits del ADC
+        N_BITS_ADC : integer  -- bits del ADC (se le suman los bits ganados si hay oversampling)
         );
     PORT(
         cuentas_ADC : in std_logic_vector(N_BITS_ADC-1 downto 0);
@@ -24,7 +24,7 @@ architecture Behavioral of ADC_A_mV is
     constant N_BITS_PRODUCTO : integer := N_BITS_ADC + N_BITS_FACTOR;
     
     -- desplazamiento de 12 bits al dato anterior
-    constant N_BITS_DIVISION : integer := N_BITS_PRODUCTO - 12;
+    constant N_BITS_DIVISION : integer := N_BITS_PRODUCTO - N_BITS_ADC;
     
     signal producto : unsigned(N_BITS_PRODUCTO-1 downto 0); 
     signal division : unsigned(N_BITS_DIVISION-1 downto 0); 
@@ -38,7 +38,7 @@ architecture Behavioral of ADC_A_mV is
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
         
-        -- multiplicacion por 5, el rango de tension ; multiplicamos por 1000
+        -- multiplicacion por 5, la tensión de ref. ; multiplicamos por 1000
         -- para representar del 0 al 5000 y luego en los displays encendemos
         -- el punto decimal en el primer digito, de manera que queda 5,000
         producto <= (unsigned(cuentas_ADC)*to_unsigned(VREFmv, N_BITS_FACTOR));
@@ -48,7 +48,7 @@ architecture Behavioral of ADC_A_mV is
         -- (25 totales - 12 desplazados y eliminados) mas significativos
         division <= producto(N_BITS_PRODUCTO-1 downto N_BITS_ADC);
         
-        conversion_mv <= std_logic_vector(division);
+        conversion_mv <= std_logic_vector(division); -- 13 bits para representar de 0 a 5000
         
         
         

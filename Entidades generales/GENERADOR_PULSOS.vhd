@@ -7,6 +7,7 @@ use IEEE.numeric_std.all;
 -- sin problemas de cruce de dominios de reloj
 entity GENERADOR_PULSOS is
     GENERIC(
+        -- en herzios
         CLK_FREC : integer := 10E6;
         PULSE_FREC : integer := 4
     );

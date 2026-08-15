@@ -17,14 +17,14 @@ use IEEE.numeric_std.all;
 entity MEDIA_MOVIL is
     GENERIC(
         N_BITS_DATO: integer := 12; -- tamaño del dato a promediar/filtrar
-        N_BITS_MUESTRAS : integer := 10; -- si se desean 64 muestras -> 6 bits (2^6=64)
+        N_BITS_MUESTRAS : integer := 8; -- si se desean 64 muestras -> 6 bits (2^6=64)
         VENTANA_TIEMPO_MS: integer := 20;   -- en milisegundos
         CLK_FREC: integer := 25E6   -- frecuencia del reloj de entrada, en hercios
         );
     PORT(
         clk : in std_logic; -- reloj de entrada
         reset: in std_logic := '0'; -- reset activo a nivel alto
-        
+
         dato_listo: in std_logic := '0';    -- se debe recibir un pulso cada vez que el 
                                             -- dato se haya actualizado, para registrar 
                                             -- una nueva muestra
@@ -32,7 +32,7 @@ entity MEDIA_MOVIL is
         dato: in std_logic_vector(N_BITS_DATO-1 downto 0);   -- dato de entrada
         
         -- dato de salida, promediado/filtrado
-        dato_promediado: out std_logic_vector(N_BITS_DATO-1 downto 0)
+        dato_promediado: out std_logic_vector(N_BITS_DATO + (N_BITS_MUESTRAS/2) - 1 downto 0)
         );
 END entity;
 
@@ -52,12 +52,15 @@ architecture Behavioral of MEDIA_MOVIL is
     -- 2^12*16 = 2^12*2^4 = 2^16 ; 
     -- PARA SUMAR 16 DATOS (2^4) DE 12 BITS HACEN FALTA 12+4 BITS
     -- 2^n_bits*2^4 = n_bits + 4
-    constant BITS_SUMA : integer := N_BITS_DATO+N_BITS_MUESTRAS;
+    constant BITS_SUMA : integer := N_BITS_DATO + N_BITS_MUESTRAS;
     signal SUMA : unsigned(BITS_SUMA-1 downto 0);
     
     constant FRECUENCIA_MUESTREO : integer := (NUM_MUESTRAS*1000)/(VENTANA_TIEMPO_MS);
     signal PULSE_FREC_MUESTREO_HZ : std_logic := '0';
     signal capturar_dato : boolean := false;
+
+    -- OVERSAMPLING
+    constant BITS_GANADOS : integer := N_BITS_MUESTRAS / 2;
     
     begin
         ------------------------------------------------------------------
@@ -79,8 +82,10 @@ architecture Behavioral of MEDIA_MOVIL is
         
         -- SUMA(15 downto 4) para 12 bits y 16 muestras
         -- dividir entre NUM_MUESTRAS.
-        -- Si es 16, equivale a quedarse con los BITS_SUMA-4 bits mas significativos
-        dato_promediado <= std_logic_vector(SUMA(BITS_SUMA-1 downto N_BITS_MUESTRAS));
+        -- Si es 16, equivale a quedarse con los BITS_SUMA-4 bits mas significativos.
+        -- Oversampling: con 2^4 muestras, ganas 2 bits,
+        -- que equivale a quedarse con los BITS_SUMA-2
+        dato_promediado <= std_logic_vector(SUMA(BITS_SUMA-1 downto BITS_GANADOS));
         
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS

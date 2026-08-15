@@ -30,14 +30,15 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
     signal clk_adc : std_logic;
-    signal bus_temperatura : t_bus_temperatura;
 
+    signal bus_temperatura : t_bus_temperatura;
     signal pll_locked, reset_and_pll_n : std_logic;
 
     signal KEY_pulsos : std_logic_vector(1 downto 0);
+    signal SW_sync : std_logic_vector(9 downto 0);
     signal avanzar, retroceder, ajustar : std_logic;
 
-    signal SW_sync : std_logic_vector(9 downto 0);
+    signal pulso4hz : std_logic;
 
     -- GESTION DE DISPLAYS --
     constant N_PANTALLAS : integer := 2;
@@ -46,6 +47,9 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
     signal info_displays_mv : t_bus_info_displays;
     signal info_displays_celsius : t_bus_info_displays;
     signal info_displays_activa : t_bus_info_displays;
+    signal id : std_logic_vector(3 downto 0);   -- se le asigna el valor del contador
+
+    signal bus_t_disp : t_bus_temperatura;
 
     signal array_displays_out : t_displays_7seg;
     
@@ -87,7 +91,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
                 pulsos => KEY_pulsos
             );
 
-        SINCRONIZADOR_ENTRADAS0 : entity work.SINCRONIZADOR_ENTRADAS
+        SINCRONIZADOR_ENTRADAS_SW : entity work.SINCRONIZADOR_ENTRADAS
             generic map (
                 N_ENTRADAS => 10
             )
@@ -99,6 +103,18 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
                 entradas_sincronizadas => SW_sync
             );
 
+        GENERADOR_PULSOS0 : entity work.GENERADOR_PULSOS
+            generic map (
+                CLK_FREC => PLL_C0_FREC,
+                PULSE_FREC => 4
+            )
+            port map (
+                CLK => clk_adc,
+                RESET => not reset_and_pll_n,
+                PULSE => pulso4hz
+            );
+
+
 
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
@@ -107,17 +123,20 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
                                                             -- esté listo. Activo a nivel bajo
         avanzar <= KEY_pulsos(0);
         retroceder <= KEY_pulsos(1);
+        -- se usará cuando haya registros modificables directamente en la FPGA (PWM manual por ejemplo)
         ajustar <= SW_sync(0);
 
         -- GESTION DISPLAYS
-        info_displays_celsius.valor_absoluto <= std_logic_vector(abs(bus_temperatura.centesimas_celsius));
+        id <= std_logic_vector(to_unsigned(contador_pantallas, 4));
+
+        info_displays_celsius.valor_absoluto <= std_logic_vector(abs(bus_t_disp.centesimas_celsius));
         info_displays_celsius.es_negativo <= bus_temperatura.centesimas_celsius(N_BITS_CELSIUS-1) = '1';
-        info_displays_celsius.id <= std_logic_vector(to_unsigned(contador_pantallas, 4));
+        info_displays_celsius.id <= id;
         info_displays_celsius.array_puntos_decimales <= "0100";
 
-        info_displays_mv.valor_absoluto <= std_logic_vector(resize(unsigned(bus_temperatura.milivoltios), 16));
+        info_displays_mv.valor_absoluto <= std_logic_vector(resize(unsigned(bus_t_disp.milivoltios), 16));
         info_displays_mv.es_negativo <= false;
-        info_displays_mv.id <= std_logic_vector(to_unsigned(contador_pantallas, 4));
+        info_displays_mv.id <= id;
         info_displays_mv.array_puntos_decimales <= "1000";
 
         HEX0 <= array_displays_out(0);
@@ -144,7 +163,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
             begin           
                 if rising_edge(clk_adc) then
                     if reset_and_pll_n = '0' then
-                        
+                        contador_pantallas <= 0;
                     else
                         if avanzar = '1' then
                             if contador_pantallas = N_PANTALLAS - 1 then
@@ -159,6 +178,24 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
                             else
                                 contador_pantallas <= contador_pantallas - 1;
                             end if;
+                        end if;
+                    end if;
+                end if;
+        end process;
+
+        process(clk_adc)
+        ------------------------------------------------------------------
+        -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
+        ------------------------------------------------------------------
+            
+            begin           
+                if rising_edge(clk_adc) then
+                    if reset_and_pll_n = '0' then
+                        bus_t_disp.milivoltios <= (others => '0');
+                        bus_t_disp.centesimas_celsius <= (others => '0');
+                    else
+                        if pulso4hz = '1' then
+                            bus_t_disp <= bus_temperatura;
                         end if;
                     end if;
                 end if;

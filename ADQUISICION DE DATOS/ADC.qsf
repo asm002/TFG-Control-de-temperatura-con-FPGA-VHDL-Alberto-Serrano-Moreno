@@ -582,6 +582,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO12
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO13
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO14
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO15
+set_global_assignment -name VHDL_FILE VHDL/ADC_A_CELSIUS.vhd
 set_global_assignment -name VHDL_FILE "../Entidades generales/SINCRONIZADOR_ENTRADAS.vhd"
 set_global_assignment -name VHDL_FILE "../Entidades generales/CAPTURA_PULSADORES.vhd"
 set_global_assignment -name VHDL_FILE VHDL/MV_A_TEMP.vhd
