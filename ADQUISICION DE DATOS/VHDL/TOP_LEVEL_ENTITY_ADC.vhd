@@ -29,16 +29,18 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
     ------------------------------------------------------------------
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
-    signal clk_adc : std_logic;
 
+    -- ADQUISICION DE DATOS --
+    signal clk_adc : std_logic;
     signal bus_temperatura : t_bus_temperatura;
     signal pll_locked, reset_and_pll_n : std_logic;
 
+
+    -- INTERFAZ DE USUARIO
     signal KEY_pulsos : std_logic_vector(1 downto 0);
     signal SW_sync : std_logic_vector(9 downto 0);
     signal avanzar, retroceder, ajustar : std_logic;
 
-    signal pulso4hz : std_logic;
 
     -- GESTION DE DISPLAYS --
     constant N_PANTALLAS : integer := 2;
@@ -50,6 +52,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
     signal id : std_logic_vector(3 downto 0);   -- se le asigna el valor del contador
 
     signal bus_t_disp : t_bus_temperatura;
+    signal pulso4hz : std_logic;
 
     signal array_displays_out : t_displays_7seg;
     
@@ -67,18 +70,6 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
                 bus_temperatura => bus_temperatura
             );
 
-        GESTION_DISPLAYS0 : entity work.GESTION_DISPLAYS
-            generic map (
-                N_BITS_VALOR_ABSOLUTO => N_BITS_CELSIUS
-            )
-            port map (
-                valor_absoluto => info_displays_activa.valor_absoluto,
-                es_negativo => info_displays_activa.es_negativo,
-                id => info_displays_activa.id,
-                array_puntos_decimales => info_displays_activa.array_puntos_decimales,
-                displays_hex_out => array_displays_out
-            );
-        
         CAPTURA_PULSADORES0 : entity work.CAPTURA_PULSADORES
             generic map (
                 N_PULSADORES => 2
@@ -103,6 +94,18 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
                 entradas_sincronizadas => SW_sync
             );
 
+        GESTION_DISPLAYS0 : entity work.GESTION_DISPLAYS
+            generic map (
+                N_BITS_VALOR_ABSOLUTO => N_BITS_CELSIUS
+            )
+            port map (
+                valor_absoluto => info_displays_activa.valor_absoluto,
+                es_negativo => info_displays_activa.es_negativo,
+                id => info_displays_activa.id,
+                array_puntos_decimales => info_displays_activa.array_puntos_decimales,
+                displays_hex_out => array_displays_out
+            );
+
         GENERADOR_PULSOS0 : entity work.GENERADOR_PULSOS
             generic map (
                 CLK_FREC => PLL_C0_FREC,
@@ -113,7 +116,6 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
                 RESET => not reset_and_pll_n,
                 PULSE => pulso4hz
             );
-
 
 
         ------------------------------------------------------------------
@@ -155,7 +157,8 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
         ------------------------------------------------------------------
-        process(clk_adc)
+
+        process(clk_adc) -- Gestión del contador de pantallas
         ------------------------------------------------------------------
         -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
         ------------------------------------------------------------------
@@ -183,7 +186,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
                 end if;
         end process;
 
-        process(clk_adc)
+        process(clk_adc) -- Refresco a 4 Hz de los displays
         ------------------------------------------------------------------
         -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
         ------------------------------------------------------------------
