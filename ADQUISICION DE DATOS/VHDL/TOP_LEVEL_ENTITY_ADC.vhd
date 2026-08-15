@@ -130,7 +130,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
         id <= std_logic_vector(to_unsigned(contador_pantallas, 4));
 
         info_displays_celsius.valor_absoluto <= std_logic_vector(abs(bus_t_disp.centesimas_celsius));
-        info_displays_celsius.es_negativo <= bus_temperatura.centesimas_celsius(N_BITS_CELSIUS-1) = '1';
+        info_displays_celsius.es_negativo <= bus_t_disp.centesimas_celsius(N_BITS_CELSIUS-1) = '1';
         info_displays_celsius.id <= id;
         info_displays_celsius.array_puntos_decimales <= "0100";
 
