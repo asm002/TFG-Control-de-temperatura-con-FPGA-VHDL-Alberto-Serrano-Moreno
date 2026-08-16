@@ -582,6 +582,20 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO12
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO13
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO14
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO15
+set_global_assignment -name QIP_FILE "../ADQUISICION DE DATOS/PLL_IP.qip"
+set_global_assignment -name QIP_FILE "../ADQUISICION DE DATOS/ADC_IP/synthesis/ADC_IP.qip"
+set_global_assignment -name VHDL_FILE VHDL/TOP_LEVEL_ENTITY_CONTROL.vhd
+set_global_assignment -name VHDL_FILE "../Entidades generales/SINCRONIZADOR_ENTRADAS.vhd"
+set_global_assignment -name VHDL_FILE "../Entidades generales/GESTION_DISPLAYS.vhd"
+set_global_assignment -name VHDL_FILE "../Entidades generales/GENERADOR_PULSOS.vhd"
+set_global_assignment -name VHDL_FILE "../Entidades generales/DISPLAY.vhd"
+set_global_assignment -name VHDL_FILE "../Entidades generales/CONFIG_PROYECTO.VHD"
+set_global_assignment -name VHDL_FILE "../Entidades generales/CAPTURA_PULSADORES.vhd"
+set_global_assignment -name VHDL_FILE "../Entidades generales/BIN2BCD_9999.vhd"
+set_global_assignment -name VHDL_FILE ../PWM/VHDL/PWM.vhd
+set_global_assignment -name VHDL_FILE ../PWM/VHDL/GENERADOR_PWM.vhd
+set_global_assignment -name VHDL_FILE VHDL/TODO_O_NADA.vhd
+set_global_assignment -name VHDL_FILE VHDL/CONTROL.vhd
 set_global_assignment -name VHDL_FILE ../COMUNICACIONES/VHDL/UART_TX.vhd
 set_global_assignment -name VHDL_FILE ../COMUNICACIONES/VHDL/UART_RX.vhd
 set_global_assignment -name VHDL_FILE ../COMUNICACIONES/VHDL/SECUENCIADOR.vhd
@@ -589,21 +603,11 @@ set_global_assignment -name VHDL_FILE ../COMUNICACIONES/VHDL/PARSER_ASCII_RX.vhd
 set_global_assignment -name VHDL_FILE ../COMUNICACIONES/VHDL/MENSAJE_TX.vhd
 set_global_assignment -name VHDL_FILE ../COMUNICACIONES/VHDL/COMUNICACIONES.vhd
 set_global_assignment -name VHDL_FILE ../COMUNICACIONES/VHDL/BUFFER_RX.vhd
-set_global_assignment -name VHDL_FILE VHDL/TODO_O_NADA.vhd
-set_global_assignment -name VHDL_FILE "../Entidades generales/GESTION_DISPLAYS.vhd"
-set_global_assignment -name QIP_FILE "../ADQUISICION DE DATOS/ADC_IP/synthesis/ADC_IP.qip"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/PLL_IP.vhd"
-set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/mV_A_TEMP.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/MV_A_TEMP.vhd"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/MEDIA_MOVIL.vhd"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADQUISICION_DE_DATOS.vhd"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_DRIVER.vhd"
-set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_A_mV.vhd"
-set_global_assignment -name VHDL_FILE "../Entidades generales/GENERADOR_PULSOS.vhd"
-set_global_assignment -name VHDL_FILE "../Entidades generales/DISPLAY.vhd"
-set_global_assignment -name VHDL_FILE "../Entidades generales/BIN2BCD_9999.vhd"
-set_global_assignment -name VHDL_FILE ../PWM/VHDL/GENERADOR_PWM.vhd
-set_global_assignment -name VHDL_FILE ../PWM/VHDL/PWM.vhd
-set_global_assignment -name VHDL_FILE "../Entidades generales/CONFIG_PROYECTO.VHD"
-set_global_assignment -name VHDL_FILE VHDL/TOP_LEVEL_ENTITY_CONTROL.vhd
-set_global_assignment -name VHDL_FILE VHDL/CONTROL.vhd
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_A_MV.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_A_CELSIUS.vhd"
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

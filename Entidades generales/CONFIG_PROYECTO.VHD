@@ -12,8 +12,8 @@ package CONFIG_PROYECTO is
 
     ---- CONSTANTES ----
     -- Frecuencias
-    constant PLL_C0_FREC : integer := 25E6; -- lo suyo sería modificar el PLL para que esta frecuencia sea 50 Mhz
-                                            -- cuanto mas alta, menores imprecisiones y mejor pwm
+    constant PLL_C0_FREC : integer := 25E6; -- 25 MHz
+                                            
     constant BAUD_FREC : integer := 115200;
     constant MSG_FREC : integer := 10;  -- frecuencia a la que se envian los datos por puerto serie (TX)
                                         -- 10 hz -> 100 ms
@@ -37,7 +37,7 @@ package CONFIG_PROYECTO is
     constant N_BITS_PWM : integer := 10;
     constant V_TIEMPO_MEDIA_MOVIL : integer := 20;  -- ventana de tiempo en milisegundos
 
-    constant MSG_N_BYTES_TX : integer := 30; -- CUIDADO: debe coincidir con el tamaño
+    constant MSG_N_BYTES_TX : integer := 31; -- CUIDADO: debe coincidir con el tamaño
                                              -- de indice dentro de MENSAJE_TX.
                                              -- No se puede modificar sin modificar la
                                              -- arquitectura de MENSAJE_TX
@@ -46,6 +46,13 @@ package CONFIG_PROYECTO is
                                                  -- bytes que podrá enviar el PC
     constant N_BITS_PID : integer := 16;
     
+    -- Inicialización
+    constant MODO0 : std_logic := '0'; -- manual
+    constant PWM_MANUAL0 : std_logic_vector(N_BITS_PWM-1 downto 0) := (others=>'0');
+    constant KP0 : std_logic_vector(N_BITS_PID-1 downto 0) := std_logic_vector(to_unsigned(0500, N_BITS_PID)); -- 05.00
+    constant KI0 : std_logic_vector(N_BITS_PID-1 downto 0) := std_logic_vector(to_unsigned(0050, N_BITS_PID)); -- 00.50
+    constant KD0 : std_logic_vector(N_BITS_PID-1 downto 0) := std_logic_vector(to_unsigned(0025, N_BITS_PID)); -- 00.25
+    constant CONSIGNA0 : signed(N_BITS_CELSIUS-1 downto 0) := to_signed(2000, N_BITS_CELSIUS);                 -- 20.00 C
     
     ---- BUSES Y ARRAYS ----
     type t_bus_temperatura is record
@@ -64,14 +71,25 @@ package CONFIG_PROYECTO is
         kp                    : std_logic_vector(N_BITS_PID-1 downto 0);  -- 0.00 a 99.99
         ki                    : std_logic_vector(N_BITS_PID-1 downto 0);  -- 0.00 a 99.99
         kd                    : std_logic_vector(N_BITS_PID-1 downto 0);  -- 0.00 a 99.99
-        consigna              : signed(N_BITS_CELSIUS-1 downto 0);  -- -99.90 a +99.90
+        consigna              : signed(N_BITS_CELSIUS-1 downto 0);  -- -99.99 a +99.99
     end record;
 
     type t_bus_datos_graficos_tx is record
-        consigna        : signed(N_BITS_CELSIUS-1 downto 0);  -- -99.90 a +99.90 
+        consigna        : signed(N_BITS_CELSIUS-1 downto 0);  -- -99.99 a +99.99 
         bus_temperatura : t_bus_temperatura;
-        error           : signed(N_BITS_CELSIUS-1 downto 0);  -- -199.8 a +199.8
+        error           : signed(N_BITS_CELSIUS-1 downto 0);  -- -99.99 a +99.99
         pwm             : std_logic_vector(N_BITS_PWM-1 downto 0);   -- 0 a 1023
+    end record;
+
+    type t_bus_estado_control is record
+        modo                  : std_logic;  -- '0' -> lazo abierto ; '1' -> lazo cerrado
+        pwm                   : std_logic_vector(N_BITS_PWM-1 downto 0);   -- 0 a 1023
+        kp                    : std_logic_vector(N_BITS_PID-1 downto 0);  -- 0.00 a 99.99
+        ki                    : std_logic_vector(N_BITS_PID-1 downto 0);  -- 0.00 a 99.99
+        kd                    : std_logic_vector(N_BITS_PID-1 downto 0);  -- 0.00 a 99.99
+        consigna              : signed(N_BITS_CELSIUS-1 downto 0);  -- -99.99 a +99.99
+        bus_temperatura       : t_bus_temperatura;
+        error                 : signed(N_BITS_CELSIUS-1 downto 0);  -- -99.99 a +99.99
     end record;
 
     type t_bus_bcd is record

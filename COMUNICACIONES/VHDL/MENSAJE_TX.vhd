@@ -25,12 +25,8 @@ architecture Behavioral of MENSAJE_TX is
     signal ascii_signo_consigna : std_logic_vector(7 downto 0);
     signal ascii_signo_error : std_logic_vector(7 downto 0);
 
-    -- signal consigna_bcd_decenas : std_logic_vector(3 downto 0);
-    -- signal consigna_bcd_unidades : std_logic_vector(3 downto 0);
-    -- signal consigna_bcd_decimas : std_logic_vector(3 downto 0);
-    -- signal consigna_bcd_centesimas : std_logic_vector(3 downto 0);
-
     signal bus_bcd_consigna : t_bus_bcd;
+    signal bus_bcd_temperatura : t_bus_bcd;
     signal bus_bcd_error : t_bus_bcd;
     signal bus_bcd_pwm : t_bus_bcd;
 
@@ -50,6 +46,18 @@ architecture Behavioral of MENSAJE_TX is
                 BCD1 => bus_bcd_consigna.bcd1,
                 BCD2 => bus_bcd_consigna.bcd2,
                 BCD3 => bus_bcd_consigna.bcd3
+            );
+
+        BCD_TEMPERATURA : entity work.BIN2BCD_9999
+            generic map (
+                n_bits => N_BITS_CELSIUS
+            )
+            port map (
+                BIN => std_logic_vector(abs(bus_datos_graficos.bus_temperatura.centesimas_celsius)),
+                BCD0 => bus_bcd_temperatura.bcd0,
+                BCD1 => bus_bcd_temperatura.bcd1,
+                BCD2 => bus_bcd_temperatura.bcd2,
+                BCD3 => bus_bcd_temperatura.bcd3
             );
 
         BCD_ERROR : entity work.BIN2BCD_9999
@@ -84,7 +92,7 @@ architecture Behavioral of MENSAJE_TX is
         bus_temperatura <= bus_datos_graficos.bus_temperatura;
 
         -- signo menos (0x2D) o signo más (0x2B) en ASCII
-        ascii_signo_temp <= x"2D" when bus_temperatura.bit_signo = '1' else x"2B";
+        ascii_signo_temp <= x"2D" when bus_temperatura.centesimas_celsius(N_BITS_CELSIUS-1) = '1' else x"2B";
         ascii_signo_consigna <= x"2D" when bus_datos_graficos.consigna(N_BITS_CELSIUS-1) = '1' else x"2B";
         ascii_signo_error <= x"2D" when bus_datos_graficos.error(N_BITS_CELSIUS-1) = '1' else x"2B";
 
@@ -107,30 +115,31 @@ architecture Behavioral of MENSAJE_TX is
             
             -- <TEMPERATURA.0> <+99.9 > -99.9 a +99.9
             ascii_signo_temp                        when 12,  -- signo de la temperatura
-            x"3" & bus_temperatura.bcd_decenas      when 13,
-            x"3" & bus_temperatura.bcd_unidades     when 14,
+            x"3" & bus_bcd_temperatura.bcd3         when 13,
+            x"3" & bus_bcd_temperatura.bcd2         when 14,
             x"2E"                                   when 15,  -- punto (decimal)
-            x"3" & bus_temperatura.bcd_decimas      when 16,
-            x"20"                                   when 17,  -- espacio
+            x"3" & bus_bcd_temperatura.bcd1         when 16,
+            x"3" & bus_bcd_temperatura.bcd0         when 17,
+            x"20"                                   when 18,  -- espacio
             
             -- <ERROR.0> <+99.9 > -99.9 a +99.9 
             -- Saturamos en +-99.99 aunque teoricamente, por la consigna,
             -- podria tomar el rango -199.8 a +199.8 (en la practica nunca vamos a tener ese error tan grande
             -- y asi nos ahorramos un bcd4)
-            ascii_signo_error           when 18,   -- +
-            x"3" & bus_bcd_error.bcd3   when 19,   -- 9
-            x"3" & bus_bcd_error.bcd2   when 20,   -- 9
-            x"2E"                       when 21,   -- punto
-            x"3" & bus_bcd_error.bcd1   when 22,   -- 9
-            x"3" & bus_bcd_error.bcd0   when 23,   -- 9
-            x"20"                       when 24,  -- espacio
+            ascii_signo_error           when 19,   -- +
+            x"3" & bus_bcd_error.bcd3   when 20,   -- 9
+            x"3" & bus_bcd_error.bcd2   when 21,   -- 9
+            x"2E"                       when 22,   -- punto
+            x"3" & bus_bcd_error.bcd1   when 23,   -- 9
+            x"3" & bus_bcd_error.bcd0   when 24,   -- 9
+            x"20"                       when 25,  -- espacio
             
             -- <PWM> <1023\n> 0000 a 1023
-            x"3" & bus_bcd_pwm.bcd3 when 25,  -- 1
-            x"3" & bus_bcd_pwm.bcd2 when 26,  -- 0
-            x"3" & bus_bcd_pwm.bcd1 when 27,  -- 2
-            x"3" & bus_bcd_pwm.bcd0 when 28,  -- 3
-            x"0A" when 29,  -- salto de linea (LF)
+            x"3" & bus_bcd_pwm.bcd3 when 26,  -- 1
+            x"3" & bus_bcd_pwm.bcd2 when 27,  -- 0
+            x"3" & bus_bcd_pwm.bcd1 when 28,  -- 2
+            x"3" & bus_bcd_pwm.bcd0 when 29,  -- 3
+            x"0A" when 30,  -- salto de linea (LF)
             
             x"21" when others;  -- signo de exclamacion
         
