@@ -38,8 +38,7 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
 
     -- INTERFAZ DE USUARIO
     signal KEY_pulsos : std_logic_vector(1 downto 0);
-    signal SW_sync : std_logic_vector(9 downto 0);
-    signal avanzar, retroceder, ajustar : std_logic;
+    signal avanzar, retroceder : std_logic;
 
 
     -- GESTION DE DISPLAYS --
@@ -82,18 +81,6 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
                 pulsos => KEY_pulsos
             );
 
-        SINCRONIZADOR_ENTRADAS_SW : entity work.SINCRONIZADOR_ENTRADAS
-            generic map (
-                N_ENTRADAS => 10
-            )
-            port map (
-                clk => clk_adc,
-                reset => not reset_and_pll_n,
-
-                entradas => SW,
-                entradas_sincronizadas => SW_sync
-            );
-
         GESTION_DISPLAYS0 : entity work.GESTION_DISPLAYS
             generic map (
                 N_BITS_VALOR_ABSOLUTO => N_BITS_CELSIUS
@@ -125,8 +112,6 @@ architecture Behavioral of TOP_LEVEL_ENTITY_ADC is
                                                             -- esté listo. Activo a nivel bajo
         avanzar <= KEY_pulsos(0);
         retroceder <= KEY_pulsos(1);
-        -- se usará cuando haya registros modificables directamente en la FPGA (PWM manual por ejemplo)
-        ajustar <= SW_sync(0);
 
         -- GESTION DISPLAYS
         id <= std_logic_vector(to_unsigned(contador_pantallas, 4));
