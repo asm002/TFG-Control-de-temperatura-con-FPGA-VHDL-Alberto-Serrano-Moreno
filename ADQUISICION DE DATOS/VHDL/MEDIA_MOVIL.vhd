@@ -2,22 +2,28 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
--- Implementado el diezmado. En lugar de añadir un dato a la velocidad del reloj 
--- (PLL, 10MHz), se reduce la frecuencia mediante un contador_diezmado
--- que hace que se recoja un dato cada 312.5 microsegundos (3125*1/(10*10^6))
--- este tiempo multiplicado por los 64 DATOS (2^6_BITS_MUESTRAS), hace un total 
--- de 20 ms para rellenar el array de datos completo
--- 20 ms corresponde a una frecuencia de 50Hz, la de la red electrica en España
--- por tanto de este modo se implementa un filtrado digital del ruido electico de 50hz
--- la ventana de tiempo (los ultimos datos que se tienen en cuenta para 
--- la media, 64 datos en los ultimos 20 ms), coincide exactamente
+
+-- En lugar de añadir un dato a la velocidad del reloj 
+-- (PLL_C0, 25MHz), se reduce la frecuencia mediante un contador_diezmado
+-- que hace que se recoja un dato cada 78.125 microsegundos.
+-- Este tiempo multiplicado por los 256 DATOS, hace un total 
+-- de 20 ms aproximadamente para rellenar el array de datos completo.
+
+-- 20 ms corresponde a una frecuencia de 50Hz, la de la red electrica en España.
+-- Por tanto de este modo se implementa un filtrado digital del ruido electico de 50hz.
+
+-- La ventana de tiempo (los ultimos datos que se tienen en cuenta para 
+-- la media, 256 datos en los ultimos 20 ms), coincide
 -- con el periodo de la onda ruidosa de 50hz. 
--- Por tanto, la muestra siempre contiene el semiperiodo positivo y el negativo
+-- Por tanto, la muestra siempre contiene un semiperiodo positivo y otro negativo
 -- de la onda. Al hacer la media se anula uno con otro y se filtra el ruido
 entity MEDIA_MOVIL is
     GENERIC(
-        N_BITS_DATO: integer := 12; -- tamaño del dato a promediar/filtrar
-        N_BITS_MUESTRAS : integer := 8; -- si se desean 64 muestras -> 6 bits (2^6=64)
+        N_BITS_DATO: integer := 16; -- tamaño del dato a promediar/filtrar
+        
+        -- si se desean 256 muestras -> 8 bits (2^8=256). DEBE SER PAR (OVERSAMPLING)
+        N_BITS_MUESTRAS : integer := 8;
+        
         VENTANA_TIEMPO_MS: integer := 20;   -- en milisegundos
         CLK_FREC: integer := 25E6   -- frecuencia del reloj de entrada, en hercios
         );
@@ -41,7 +47,7 @@ architecture Behavioral of MEDIA_MOVIL is
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
     
-    -- debe ser potencia de 2, 2^4=16
+    -- debe ser potencia de 2, 2^8=256
     constant NUM_MUESTRAS : integer := 2**N_BITS_MUESTRAS;
     
     type array_datos is array(NUM_MUESTRAS-1 downto 0)
@@ -49,15 +55,15 @@ architecture Behavioral of MEDIA_MOVIL is
     
     signal DATOS : array_datos := (others => (others => '0'));
     
-    -- 2^12*16 = 2^12*2^4 = 2^16 ; 
-    -- PARA SUMAR 16 DATOS (2^4) DE 12 BITS HACEN FALTA 12+4 BITS
-    -- 2^n_bits*2^4 = n_bits + 4
+    -- 2^16*64 = 2^16*2^8 = 2^24 ; 
+    -- PARA SUMAR 256 DATOS (2^8) DE 16 BITS HACEN FALTA 16+8 BITS
+    -- 2^n_bits*2^8 = n_bits + 8
     constant BITS_SUMA : integer := N_BITS_DATO + N_BITS_MUESTRAS;
     signal SUMA : unsigned(BITS_SUMA-1 downto 0);
     
     constant FRECUENCIA_MUESTREO : integer := (NUM_MUESTRAS*1000)/(VENTANA_TIEMPO_MS);
     signal PULSE_FREC_MUESTREO_HZ : std_logic := '0';
-    signal capturar_dato : boolean := false;
+    --signal capturar_dato : boolean := false; cambiado a variable
 
     -- OVERSAMPLING
     constant BITS_GANADOS : integer := N_BITS_MUESTRAS / 2;
@@ -80,11 +86,12 @@ architecture Behavioral of MEDIA_MOVIL is
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
         
-        -- SUMA(15 downto 4) para 12 bits y 16 muestras
-        -- dividir entre NUM_MUESTRAS.
-        -- Si es 16, equivale a quedarse con los BITS_SUMA-4 bits mas significativos.
-        -- Oversampling: con 2^4 muestras, ganas 2 bits,
-        -- que equivale a quedarse con los BITS_SUMA-2
+        -- Dividir entre NUM_MUESTRAS:
+        -- Para 16 bits y 256 muestras: SUMA(23 downto 8) (16 bits)
+        
+        -- Oversampling: con 2^8 muestras, ganas 4 bits.
+        -- BITS_MUESTRAS - BITS_GANADOS = BITS_GANADOS
+        -- SUMA(23 downto 4) (20 bits)
         dato_promediado <= std_logic_vector(SUMA(BITS_SUMA-1 downto BITS_GANADOS));
         
         ------------------------------------------------------------------
@@ -95,6 +102,7 @@ architecture Behavioral of MEDIA_MOVIL is
         -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
         ------------------------------------------------------------------
             variable suma_var : unsigned(BITS_SUMA-1 downto 0) := (others=>'0');
+            variable capturar_dato : boolean := false;
             begin           
                 if rising_edge(clk) then
                 
@@ -103,13 +111,13 @@ architecture Behavioral of MEDIA_MOVIL is
                         suma_var := (others => '0');
                         DATOS <= (others => (others => '0'));
                         SUMA <= (others => '0');
-                        capturar_dato <= false;
+                        capturar_dato := false;
                         
                     else
                         
                         if PULSE_FREC_MUESTREO_HZ = '1' then
                         
-                            capturar_dato <= true;
+                            capturar_dato := true;
                             
                         end if;
                         
@@ -137,7 +145,7 @@ architecture Behavioral of MEDIA_MOVIL is
                              - resize(unsigned(DATOS(NUM_MUESTRAS-1)), BITS_SUMA);
                             
                             SUMA <= suma_var;
-                            capturar_dato <= false;
+                            capturar_dato := false;
                             
                         end if;
                     

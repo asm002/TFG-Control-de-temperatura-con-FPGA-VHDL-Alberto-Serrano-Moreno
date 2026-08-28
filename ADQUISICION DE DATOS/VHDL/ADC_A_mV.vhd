@@ -20,10 +20,10 @@ architecture Behavioral of ADC_A_mV is
     ------------------------------------------------------------------
     constant N_BITS_FACTOR : integer := 3+10;   -- 3 bits para V_ref y 10 bits para 1000
     
-    -- multiplicacion de un dato de 12 bits y un dato de 13 bits
+    -- multiplicacion de un dato de 16 bits y un dato de 13 bits
     constant N_BITS_PRODUCTO : integer := N_BITS_ADC + N_BITS_FACTOR;
     
-    -- desplazamiento de 12 bits al dato anterior
+    -- desplazamiento de 16 bits al dato anterior
     constant N_BITS_DIVISION : integer := N_BITS_PRODUCTO - N_BITS_ADC;
     
     signal producto : unsigned(N_BITS_PRODUCTO-1 downto 0); 
@@ -43,9 +43,9 @@ architecture Behavioral of ADC_A_mV is
         -- el punto decimal en el primer digito, de manera que queda 5,000
         producto <= (unsigned(cuentas_ADC)*to_unsigned(VREFmv, N_BITS_FACTOR));
         
-        -- division entre 4096 que equivale a un desplazamiento a la derecha
-        -- de 12 bits (2^12=4096) o quedarse con los 13 bits
-        -- (25 totales - 12 desplazados y eliminados) mas significativos
+        -- division entre 65536 que equivale a un desplazamiento a la derecha
+        -- de 16 bits (2^16=65536) o quedarse con los 13 bits
+        -- (29 totales - 16 desplazados y eliminados) mas significativos
         division <= producto(N_BITS_PRODUCTO-1 downto N_BITS_ADC);
         
         conversion_mv <= std_logic_vector(division); -- 13 bits para representar de 0 a 5000
