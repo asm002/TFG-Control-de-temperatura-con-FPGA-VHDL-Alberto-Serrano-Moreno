@@ -5,7 +5,7 @@ use IEEE.numeric_std.all;
 use work.CONFIG_PROYECTO.all;
 
 --  Formato completo de mensajes:
---  DATA <CONSIGNA.0> <TEMPERATURA.0> <ERROR.0> <PWM>
+--  DATA <CONSIGNA.00> <TEMPERATURA.00> <ERROR.00> <PWM>
 
 entity MENSAJE_TX is
     port(
@@ -104,7 +104,7 @@ architecture Behavioral of MENSAJE_TX is
             x"41" when 3,  -- 'A'
             x"20" when 4,  -- Espacio ' '
             
-            -- <CONSIGNA.0> <+99.99 > -99.90 a +99.90
+            -- <CONSIGNA.0> <+99.99 > -99.99 a +99.99
             ascii_signo_consigna            when 5,
             x"3" & bus_bcd_consigna.bcd3    when 6,
             x"3" & bus_bcd_consigna.bcd2    when 7,
@@ -113,7 +113,7 @@ architecture Behavioral of MENSAJE_TX is
             x"3" & bus_bcd_consigna.bcd0    when 10,
             x"20"                           when 11,  -- espacio
             
-            -- <TEMPERATURA.0> <+99.9 > -99.9 a +99.9
+            -- <TEMPERATURA.0> <+99.99 > -99.99 a +99.99
             ascii_signo_temp                        when 12,  -- signo de la temperatura
             x"3" & bus_bcd_temperatura.bcd3         when 13,
             x"3" & bus_bcd_temperatura.bcd2         when 14,
@@ -122,7 +122,7 @@ architecture Behavioral of MENSAJE_TX is
             x"3" & bus_bcd_temperatura.bcd0         when 17,
             x"20"                                   when 18,  -- espacio
             
-            -- <ERROR.0> <+99.9 > -99.9 a +99.9 
+            -- <ERROR.0> <+99.99 > -99.99 a +99.99 
             -- Saturamos en +-99.99 aunque teoricamente, por la consigna,
             -- podria tomar el rango -199.8 a +199.8 (en la practica nunca vamos a tener ese error tan grande
             -- y asi nos ahorramos un bcd4)

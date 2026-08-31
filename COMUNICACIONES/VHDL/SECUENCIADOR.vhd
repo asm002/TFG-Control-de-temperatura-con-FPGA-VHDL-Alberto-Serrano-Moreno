@@ -9,13 +9,17 @@ entity SECUENCIADOR is
     port(
         clk : in std_logic;
         rst : in std_logic;
+
         mandar_mensaje : in std_logic;  -- pulso que ordena enviar un mensaje completo
                                         -- formado por varios bytes y acabado en /n (LF)
+        
+        -- Interfaz con UART_TX
         tx_ready : in std_logic;
         tx_done : in std_logic;
         tx_start : out std_logic;
         tx_data : out std_logic_vector(7 downto 0);
         
+        -- Interfaz con MENSAJE_TX
         msg_byte_indice : out integer range 0 to MSG_N_BYTES-1;
         msg_byte: in std_logic_vector(7 downto 0)
         

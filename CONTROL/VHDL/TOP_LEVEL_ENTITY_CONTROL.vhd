@@ -44,14 +44,12 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
 
     -- PWM --
     signal salida_digital_pwm : std_logic := '0';
-    signal pulso_200hz : std_logic := '0';  -- para ajustar el PWM manualmente
     signal pwm_t_on : UNSIGNED(N_BITS_PWM-1 downto 0) := (others => '0');   -- 0 a 1023
 
 
     -- INTERFAZ DE USUARIO
     signal KEY_pulsos : std_logic_vector(1 downto 0);
-    signal SW_sync : std_logic_vector(9 downto 0);
-    signal avanzar, retroceder, ajustar : std_logic;
+    signal avanzar, retroceder : std_logic;
 
 
     -- GESTION DE DISPLAYS --
@@ -80,17 +78,6 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
         ------------------------------------------------------------------
         -- MAPEO DE ENTIDADES INTERNAS
         ------------------------------------------------------------------
-
-        -- GENERADOR_PULSOS_inst : entity work.GENERADOR_PULSOS
-        --     generic map (
-        --         CLK_FREC => PLL_C0_FREC,
-        --         PULSE_FREC => 205
-        --     )
-        --     port map (
-        --         CLK => clk_adc,
-        --         RESET => not reset_and_pll_n,
-        --         PULSE => pulso_200hz
-        --     );
 
         ADQUISICION_DE_DATOS0 : entity work.ADQUISICION_DE_DATOS
             port map (
@@ -180,18 +167,6 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
                 pulsos => KEY_pulsos
             );
 
-        SINCRONIZADOR_ENTRADAS_SW : entity work.SINCRONIZADOR_ENTRADAS
-            generic map (
-                N_ENTRADAS => 10
-            )
-            port map (
-                clk => clk_adc,
-                reset => not reset_and_pll_n,
-
-                entradas => SW,
-                entradas_sincronizadas => SW_sync
-            );
-
         GESTION_DISPLAYS0 : entity work.GESTION_DISPLAYS
             generic map (
                 N_BITS_VALOR_ABSOLUTO => N_BITS_CELSIUS
@@ -237,8 +212,6 @@ architecture Behavioral of TOP_LEVEL_ENTITY_CONTROL is
         -- GESTION DISPLAYS
         avanzar <= KEY_pulsos(0);
         retroceder <= KEY_pulsos(1);
-        -- se usará cuando haya registros modificables directamente en la FPGA (PWM manual por ejemplo)
-        ajustar <= SW_sync(0);
 
         id <= std_logic_vector(to_unsigned(contador_pantallas, 4));
 

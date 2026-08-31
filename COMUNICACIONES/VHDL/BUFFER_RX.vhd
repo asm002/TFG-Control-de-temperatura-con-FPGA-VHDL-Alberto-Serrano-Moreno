@@ -9,8 +9,8 @@ entity BUFFER_RX is
         
     --     );
     port(
-        clk : std_logic;
-        rst : std_logic;
+        clk : in std_logic;
+        rst : in std_logic;
 
         -- INTERFAZ CON UART_RX
         rx_byte   : in std_logic_vector(7 downto 0); -- byte procedente de UART_RX

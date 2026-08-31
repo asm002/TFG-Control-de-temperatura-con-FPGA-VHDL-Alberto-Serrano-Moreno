@@ -5,13 +5,18 @@ use IEEE.numeric_std.all;
 entity UART_TX is
     port(
         clk         : in  std_logic;                    
-        rst         : in  std_logic;                    
+        rst         : in  std_logic;
+
         baud_ce     : in  std_logic;    -- pulso de habilitación para cumplir los baudios
-        tx_start    : in  std_logic;    -- orden de empezar a transmitir (pulso)
+
+        -- Interfaz con SECUENCIADOR
+        tx_start    : in  std_logic;  -- orden de empezar a transmitir (pulso)
         tx_byte     : in  std_logic_vector(7 downto 0);
-        tx_out      : out std_logic;    -- bit serie de salida
-        tx_ready    : out std_logic;    -- '1' si está libre, '0' si está ocupado
-        tx_done     : out std_logic     -- pulso de fin de transmisión (1 byte enviado)
+        tx_ready    : out std_logic;  -- '1' si está libre, '0' si está ocupado
+        tx_done     : out std_logic;  -- pulso de fin de transmisión (1 byte enviado)
+
+        -- Salida
+        tx_out      : out std_logic  -- bit serie de salida
     );
 END entity;
 

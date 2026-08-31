@@ -58,9 +58,6 @@ architecture Behavioral of COMUNICACIONES is
     signal s_rx_buffer_ready, s_rx_liberar_buffer : std_logic;
     signal s_rx_indice_buffer_out_byte : integer range 0 to N_BYTES_BUFFER_RX-1;
     signal s_rx_buffer_out_byte : std_logic_vector(7 downto 0);
-
-    -- signal control_data_rx : t_bus_control_data_rx;
-    -- signal s_modo_valid, s_pwm_valid, s_pid_valid : std_logic;
     
     begin
         ------------------------------------------------------------------
@@ -92,12 +89,17 @@ architecture Behavioral of COMUNICACIONES is
             port map(
                 clk => clk,       
                 rst => not reset_n,
+
                 baud_ce => baud_clock_enable,
+
+                -- Interfaz con SECUENCIADOR
                 tx_start => s_tx_start,   
-                tx_byte => s_tx_byte,    
-                tx_out => uart_tx,    
+                tx_byte => s_tx_byte,        
                 tx_ready => s_tx_ready,    
-                tx_done => s_tx_done   
+                tx_done => s_tx_done,
+
+                -- Pin de salida
+                tx_out => uart_tx  
             );
             
         MENSAJE_TX0 : entity work.MENSAJE_TX
@@ -105,10 +107,7 @@ architecture Behavioral of COMUNICACIONES is
                 indice => msg_byte_indice,
                 byte_out => msg_byte,
                 
-                bus_datos_graficos => bus_datos_graficos -- [LISTO] CAMBIAR!!! Ha servido para probar,
-                -- pero los datos de control que se envian al pc no deben provenir
-                -- directamente de la lectura del puerto serie, 
-                -- sino del registro del modulo de control cuando esté hecho
+                bus_datos_graficos => bus_datos_graficos
             );
             
         SECUENCIADOR0 : entity work.SECUENCIADOR
@@ -118,12 +117,16 @@ architecture Behavioral of COMUNICACIONES is
             port map(
                 clk => clk,
                 rst => not reset_n,
+
                 mandar_mensaje => msg_pulse,
+
+                -- Interfaz con UART_TX
                 tx_ready => s_tx_ready,
                 tx_done => s_tx_done,
                 tx_start => s_tx_start,
                 tx_data => s_tx_byte,
                 
+                -- Interfaz con MENSAJE_TX
                 msg_byte_indice => msg_byte_indice,
                 msg_byte => msg_byte
                 );
@@ -136,7 +139,11 @@ architecture Behavioral of COMUNICACIONES is
             port map (
                 clk => clk,
                 rst => not reset_n,
+
+                -- Pin de entrada
                 rx_in => uart_rx,
+
+                -- Interfaz con BUFFER_RX
                 rx_byte => s_rx_byte,
                 rx_ready => s_rx_ready 
             );
@@ -145,12 +152,15 @@ architecture Behavioral of COMUNICACIONES is
             port map (
                 clk => clk,
                 rst => not reset_n,
+
                 baud_ce => baud_clock_enable,
+
                 tx_start => s_rx_ready,
                 tx_byte => s_rx_byte,
-                tx_out => uart_tx_echo,
                 tx_ready => s_tx_ready_echo,
-                tx_done => s_tx_done_echo
+                tx_done => s_tx_done_echo,
+
+                tx_out => uart_tx_echo
             );
 
         BUFFER_RX0 : entity work.BUFFER_RX
@@ -187,9 +197,6 @@ architecture Behavioral of COMUNICACIONES is
                 pwm_valid => pwm_valid,
                 pid_valid => pid_valid
             );
-
-
-
         
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS

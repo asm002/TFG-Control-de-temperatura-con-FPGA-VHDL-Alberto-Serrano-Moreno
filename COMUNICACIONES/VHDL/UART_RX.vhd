@@ -11,8 +11,10 @@ entity UART_RX is
         clk       : in  std_logic;
         rst       : in  std_logic;
         
+        -- Pin de entrada
         rx_in    : in  std_logic;   -- pin de entrada rx
         
+        -- Interfaz con BUFFER_RX
         rx_byte   : out std_logic_vector(7 downto 0); -- byte recibido
         rx_ready  : out std_logic   -- pulso de 1 ciclo indicando que el byte ha sido leido completo
     );

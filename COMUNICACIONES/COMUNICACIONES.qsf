@@ -594,15 +594,16 @@ set_global_assignment -name EDA_TEST_BENCH_NAME "test buffer rx" -section_id eda
 set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id "test buffer rx"
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME "test buffer rx" -section_id "test buffer rx"
 set_global_assignment -name EDA_TEST_BENCH_FILE TB_BUFFER_RX.vhd -section_id "test buffer rx"
+set_global_assignment -name VHDL_FILE "../Entidades generales/GESTION_DISPLAYS.vhd"
+set_global_assignment -name VHDL_FILE "../Entidades generales/CAPTURA_PULSADORES.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_A_MV.vhd"
+set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_A_CELSIUS.vhd"
 set_global_assignment -name QIP_FILE "../ADQUISICION DE DATOS/ADC_IP/synthesis/ADC_IP.qip"
 set_global_assignment -name QIP_FILE "../ADQUISICION DE DATOS/PLL_IP.qip"
-set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/TOP_LEVEL_ENTITY_ADC.vhd"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/PLL_IP.vhd"
-set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/mV_A_TEMP.vhd"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/MEDIA_MOVIL.vhd"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADQUISICION_DE_DATOS.vhd"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_DRIVER.vhd"
-set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_A_mV.vhd"
 set_global_assignment -name VHDL_FILE VHDL/UART_TX.vhd
 set_global_assignment -name VHDL_FILE VHDL/UART_RX.vhd
 set_global_assignment -name VHDL_FILE VHDL/TOP_LEVEL_ENTITY_COM.vhd

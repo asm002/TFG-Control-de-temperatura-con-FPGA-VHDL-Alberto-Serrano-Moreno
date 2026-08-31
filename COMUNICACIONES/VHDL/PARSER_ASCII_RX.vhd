@@ -175,7 +175,7 @@ architecture Behavioral of PARSER_ASCII_RX is
                             -- para pasar de ascii a bcd simplemente restamos 0x30 (el cero).
                             -- Por cada digito que haya, multiplicamos lo anterior por 10.
                             -- En un numero de 3 cifras, leyendo de izquierda a derecha,
-                            -- (como hacemos aqui) el primero es potencia 2 (10^2), el 
+                            -- el primero es potencia 2 (10^2), el 
                             -- segundo potencia 1, el tercero potencia 0.
                             acumulador <= (acumulador * 10) + to_integer(unsigned(in_byte) - x"30");
                             indice_interno <= indice_interno + 1;
