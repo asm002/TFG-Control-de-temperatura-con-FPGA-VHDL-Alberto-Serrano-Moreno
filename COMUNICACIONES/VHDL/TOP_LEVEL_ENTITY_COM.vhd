@@ -1,11 +1,9 @@
--- Este modulo tan solo instancia COMUNICACIONES (y adquisicion) 
--- para conectarlo con los periféricos de la tarjeta y así probar dicho modulo.
+
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library work;
 use work.CONFIG_PROYECTO.all;
 
 entity TOP_LEVEL_ENTITY_COM is
@@ -31,117 +29,261 @@ architecture Behavioral of TOP_LEVEL_ENTITY_COM is
     -- DEFINICION DE SEÑALES INTERNAS, TIPOS Y CONSTANTES
     ------------------------------------------------------------------
     
-    signal clk_adc : std_logic; -- 25 MHz
-    signal pll_locked : std_logic;
-    signal reset_and_pll_n : std_logic;
-    
+    -- ADQUISICION DE DATOS --
+    signal clk_adc : std_logic;
     signal bus_temperatura : t_bus_temperatura;
-    signal bus_displays : t_displays_7seg;
+    signal pll_locked, reset_and_pll_n : std_logic;
 
-    signal bus_datos_graficos : t_bus_datos_graficos_tx;
+
+    -- COMUNICACIONES --
+    signal bus_datos_graficos_tx : t_bus_datos_graficos_tx;
     signal bus_control_data_rx : t_bus_control_data_rx;
-    signal modo_valid, pwm_valid, pid_valid : std_logic := '0';
-    signal consigna_reg : signed(N_BITS_CELSIUS-1 downto 0);
-    signal pwm_reg      : std_logic_vector(N_BITS_PWM-1 downto 0);
-    
+    signal modo_valid, pid_valid, pwm_valid : std_logic;
+    signal error : signed(N_BITS_CELSIUS-1 downto 0);
+    --signal bus_estado_interno : t_bus_estado_control;
+
+
+    -- INTERFAZ DE USUARIO
+    signal KEY_pulsos : std_logic_vector(1 downto 0);
+    signal avanzar, retroceder : std_logic;
+
+
+    -- GESTION DE DISPLAYS --
+    constant N_PANTALLAS : integer := 9;
+    signal contador_pantallas : integer range 0 to N_PANTALLAS-1;
+
+    signal info_displays_modo : t_bus_info_displays;
+    signal info_displays_pwm : t_bus_info_displays;
+    signal info_displays_kp : t_bus_info_displays;
+    signal info_displays_ki : t_bus_info_displays;
+    signal info_displays_kd : t_bus_info_displays;
+    signal info_displays_consigna : t_bus_info_displays;
+    signal info_displays_celsius : t_bus_info_displays;
+    signal info_displays_mv : t_bus_info_displays;
+    signal info_displays_error : t_bus_info_displays;
+    signal info_displays_activa : t_bus_info_displays;
+    signal id : std_logic_vector(3 downto 0);   -- se le asigna el valor del contador
+
+    signal bus_t_disp : t_bus_temperatura;
+    signal pulso4hz : std_logic;
+
+    signal array_displays_out : t_displays_7seg;
+
+
     begin
         ------------------------------------------------------------------
         -- MAPEO DE ENTIDADES INTERNAS
         ------------------------------------------------------------------
-        COMUNICACIONES : entity work.COMUNICACIONES
-            generic map(
+
+        ADQUISICION_DE_DATOS0 : entity work.ADQUISICION_DE_DATOS
+            port map (
+                clk_50 => MAX10_CLK1_50,
+                reset_n => ARDUINO_RESET_N,
+                
+                clk_adc => clk_adc,
+                pll_locked_out => pll_locked,
+
+                bus_temperatura => bus_temperatura
+            );
+
+        COMUNICACIONES0 : entity work.COMUNICACIONES
+            generic map (
                 CLK_FREQ => PLL_C0_FREC,
                 BAUD_FREQ => BAUD_FREC,
-                MSG_FREQ => MSG_FREC  -- 100 ms -> 10 hz
-                )
-            port map(
+                MSG_FREQ => MSG_FREC
+            )
+            port map (
                 clk => clk_adc,
                 reset_n => reset_and_pll_n,
-                
+
+                -- Pines de comunicacion (convertidor puerto serie)
                 uart_tx => ARDUINO_IO(PIN_TX),
                 uart_rx => ARDUINO_IO(PIN_RX),
                 uart_tx_echo => ARDUINO_IO(PIN_TX_ECHO),
-                
-                -- DATOS DESDE OTRAS AREAS (Para enviar por TX) --
-                bus_datos_graficos => bus_datos_graficos,
-                
-                -- DATOS HACIA OTRAS AREAS (Recibidos por RX) --
+
+                -- Datos desde los registros de CONTROL (Para enviar por TX) --
+                bus_datos_graficos => bus_datos_graficos_tx,
+
+                -- Datos para CONTROL (Recibidos por RX) --
                 bus_control_data_rx => bus_control_data_rx,
                 modo_valid => modo_valid,
                 pwm_valid => pwm_valid,
                 pid_valid => pid_valid
             );
 
-            
-        ADQUISICION : entity work.ADQUISICION_DE_DATOS
-            port map(
-                clk_50 => MAX10_CLK1_50,
-                reset_n => ARDUINO_RESET_N, -- mucho cuidado, aqui solo reset de boton,
-                                            -- usar reset_and_pll_n crea un bucle
-                                            -- infinito y no funciona nada
-                                            
-                modo_displays => SW(0),
-                
-                clk_adc => clk_adc,
-                pll_locked_out => pll_locked,
-                
-                bus_temperatura => bus_temperatura,
-                displays_out => bus_displays
-                
-        );
-            
-        
+        CAPTURA_PULSADORES0 : entity work.CAPTURA_PULSADORES
+            generic map (
+                N_PULSADORES => 2
+            )
+            port map (
+                clk => clk_adc,
+                reset => not reset_and_pll_n,
+
+                pulsadores => not KEY,
+                pulsos => KEY_pulsos
+            );
+
+        GESTION_DISPLAYS0 : entity work.GESTION_DISPLAYS
+            generic map (
+                N_BITS_VALOR_ABSOLUTO => N_BITS_CELSIUS
+            )
+            port map (
+                valor_absoluto => info_displays_activa.valor_absoluto,
+                es_negativo => info_displays_activa.es_negativo,
+                id => info_displays_activa.id,
+                array_puntos_decimales => info_displays_activa.array_puntos_decimales,
+                displays_hex_out => array_displays_out
+            );
+
+        GENERADOR_PULSOS0 : entity work.GENERADOR_PULSOS
+            generic map (
+                CLK_FREC => PLL_C0_FREC,
+                PULSE_FREC => 4
+            )
+            port map (
+                CLK => clk_adc,
+                RESET => not reset_and_pll_n,
+                PULSE => pulso4hz
+            );
+
+
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
         reset_and_pll_n <= ARDUINO_RESET_N and pll_locked;  -- reset de boton y ademas condicionado a que el pll
                                                             -- esté listo. Activo a nivel bajo
-        
-        -- BUSES SALIDA
-        HEX0 <= bus_displays(0);
-        HEX1 <= bus_displays(1);
-        HEX2 <= bus_displays(2);
-        HEX3 <= bus_displays(3);
-        HEX4 <= bus_displays(4);
-        HEX5 <= bus_displays(5);
-        
-        -- Se simulan los datos que llegarian desde el area de control
-        -- bus_datos_graficos.consigna <= to_signed(2050, N_BITS_CELSIUS);
-        -- bus_datos_graficos.bus_temperatura <= bus_temperatura;
-        -- bus_datos_graficos.error <= (bus_datos_graficos.consigna - bus_temperatura.centesimas_centigrado);
-        -- bus_datos_graficos.pwm <= std_logic_vector(TO_UNSIGNED(512, N_BITS_PWM));
 
-        -- Conectamos los registros "espejo" al bus de transmision
-        bus_datos_graficos.consigna <= consigna_reg;
-        bus_datos_graficos.bus_temperatura <= bus_temperatura;
-        bus_datos_graficos.error <= (consigna_reg - bus_temperatura.centesimas_centigrado);
-        bus_datos_graficos.pwm <= pwm_reg;
-    
+        -- DATOS PARA ENVIAR POR TX (simulando el bloque de control)
+        -- se envia la misma consigna que se recibe por RX
+        bus_datos_graficos_tx.consigna <= bus_control_data_rx.consigna;
+        -- se envia la temperatura directamente desde la adquisicion
+        bus_datos_graficos_tx.bus_temperatura <= bus_temperatura;
+        -- se envia el error segun la consigna recibida
+        error <= bus_control_data_rx.consigna - bus_temperatura.centesimas_celsius;
+        bus_datos_graficos_tx.error <= error;
+        -- se envia el pwm de lazo abierto
+        bus_datos_graficos_tx.pwm <= bus_control_data_rx.pwm_lazo_abierto;
+
+
+        -- GESTION DISPLAYS
+        avanzar <= KEY_pulsos(0);
+        retroceder <= KEY_pulsos(1);
+
+        id <= std_logic_vector(to_unsigned(contador_pantallas, 4));
+
+        info_displays_modo.valor_absoluto <= (0 => bus_control_data_rx.modo, others => '0');
+        info_displays_modo.es_negativo <= false;
+        info_displays_modo.id <= id;
+        info_displays_modo.array_puntos_decimales <= "0000";
+
+        info_displays_pwm.valor_absoluto <= std_logic_vector(resize(unsigned(bus_control_data_rx.pwm_lazo_abierto), 16));
+        info_displays_pwm.es_negativo <= false;
+        info_displays_pwm.id <= id;
+        info_displays_pwm.array_puntos_decimales <= "0000";
+
+        info_displays_kp.valor_absoluto <= std_logic_vector(resize(unsigned(bus_control_data_rx.kp), 16));
+        info_displays_kp.es_negativo <= false;
+        info_displays_kp.id <= id;
+        info_displays_kp.array_puntos_decimales <= "0100";
+
+        info_displays_ki.valor_absoluto <= std_logic_vector(resize(unsigned(bus_control_data_rx.ki), 16));
+        info_displays_ki.es_negativo <= false;
+        info_displays_ki.id <= id;
+        info_displays_ki.array_puntos_decimales <= "0100";
+
+        info_displays_kd.valor_absoluto <= std_logic_vector(resize(unsigned(bus_control_data_rx.kd), 16));
+        info_displays_kd.es_negativo <= false;
+        info_displays_kd.id <= id;
+        info_displays_kd.array_puntos_decimales <= "0100";
+
+        info_displays_consigna.valor_absoluto <= std_logic_vector(abs(bus_control_data_rx.consigna));
+        info_displays_consigna.es_negativo <= bus_control_data_rx.consigna(N_BITS_CELSIUS-1) = '1';
+        info_displays_consigna.id <= id;
+        info_displays_consigna.array_puntos_decimales <= "0100";
+
+        info_displays_celsius.valor_absoluto <= std_logic_vector(abs(bus_t_disp.centesimas_celsius));
+        info_displays_celsius.es_negativo <= bus_t_disp.centesimas_celsius(N_BITS_CELSIUS-1) = '1';
+        info_displays_celsius.id <= id;
+        info_displays_celsius.array_puntos_decimales <= "0100";
+
+        info_displays_mv.valor_absoluto <= std_logic_vector(resize(unsigned(bus_t_disp.milivoltios), 16));
+        info_displays_mv.es_negativo <= false;
+        info_displays_mv.id <= id;
+        info_displays_mv.array_puntos_decimales <= "1000";
+
+        info_displays_error.valor_absoluto <= std_logic_vector(abs(error));
+        info_displays_error.es_negativo <= error(N_BITS_CELSIUS-1) = '1';
+        info_displays_error.id <= id;
+        info_displays_error.array_puntos_decimales <= "0100";
+
+        HEX0 <= array_displays_out(0);
+        HEX1 <= array_displays_out(1);
+        HEX2 <= array_displays_out(2);
+        HEX3 <= array_displays_out(3);
+        HEX4 <= array_displays_out(4);
+        HEX5 <= array_displays_out(5);
+
+        with contador_pantallas select info_displays_activa <= 
+            info_displays_celsius   when 0,
+            info_displays_mv        when 1,
+            info_displays_modo      when 2,
+            info_displays_consigna  when 3,
+            info_displays_error     when 4,
+            info_displays_pwm       when 5,
+            info_displays_kp        when 6,
+            info_displays_ki        when 7,
+            info_displays_kd        when 8,
+            info_displays_celsius   when others;
+
+        
         ------------------------------------------------------------------
         -- LOGICA SECUENCIAL ; PROCESOS
         ------------------------------------------------------------------
-        
-        -- proceso para simular lo que llega del modulo de control. Como no hay modulo de control,
-        -- se hace efecto espejo: lo que se recibe por RX (bus_control_data_rx), se manda (no todo)
-        -- por TX (bus_datos_graficos)
-        process(clk_adc, reset_and_pll_n)
-        begin
-            if reset_and_pll_n = '0' then
-                -- Valores por defecto al resetear
-                consigna_reg <= to_signed(2050, N_BITS_CELSIUS); 
-                pwm_reg <= std_logic_vector(TO_UNSIGNED(512, N_BITS_PWM));
-                
-            elsif rising_edge(clk_adc) then
-                -- Cuando llega un comando PID válido, actualizamos la consigna
-                if pid_valid = '1' then
-                    consigna_reg <= bus_control_data_rx.consigna;
+
+        process(clk_adc) -- Gestión del contador de pantallas
+        ------------------------------------------------------------------
+        -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
+        ------------------------------------------------------------------
+            
+            begin           
+                if rising_edge(clk_adc) then
+                    if reset_and_pll_n = '0' then
+                        contador_pantallas <= 0;
+                    else
+                        if avanzar = '1' then
+                            if contador_pantallas = N_PANTALLAS - 1 then
+                                contador_pantallas <= 0;
+                            else
+                                contador_pantallas <= contador_pantallas + 1;
+                            end if;
+
+                        elsif retroceder = '1' then
+                            if contador_pantallas = 0 then
+                                contador_pantallas <= N_PANTALLAS - 1;
+                            else
+                                contador_pantallas <= contador_pantallas - 1;
+                            end if;
+                        end if;
+                    end if;
                 end if;
-                
-                -- Cuando llega un comando PWM válido, actualizamos el ciclo de trabajo
-                if pwm_valid = '1' then
-                    pwm_reg <= bus_control_data_rx.pwm_lazo_abierto;
+        end process;
+
+        process(clk_adc) -- Refresco a 4 Hz de los displays
+        ------------------------------------------------------------------
+        -- DEFINICION DE VARIABLES, TIPOS Y CONSTANTES
+        ------------------------------------------------------------------
+            
+            begin           
+                if rising_edge(clk_adc) then
+                    if reset_and_pll_n = '0' then
+                        bus_t_disp.milivoltios <= (others => '0');
+                        bus_t_disp.centesimas_celsius <= (others => '0');
+                    else
+                        if pulso4hz = '1' then
+                            bus_t_disp <= bus_temperatura;
+                        end if;
+                    end if;
                 end if;
-            end if;
         end process;
 
 end architecture;
