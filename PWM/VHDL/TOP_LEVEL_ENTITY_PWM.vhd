@@ -92,9 +92,9 @@ architecture Behavioral of TOP_LEVEL_ENTITY_PWM is
         ------------------------------------------------------------------
         -- LOGICA COMBINACIONAL ; ASIGNACIONES DIRECTAS
         ------------------------------------------------------------------
-        ARDUINO_IO(15) <= not pwm;  -- señal negada porque la etapa de potencia
-                                    -- tiene señal de control activa a nivel bajo
-        ARDUINO_IO(14) <= '1';
+        ARDUINO_IO(PIN_PWM) <= not pwm;  -- señal negada porque la etapa de potencia
+                                         -- tiene señal de control activa a nivel bajo
+        ARDUINO_IO(PIN_PWM-1) <= '1';
         LEDR(8) <= '1';
         LEDR(9) <= pwm;
 
