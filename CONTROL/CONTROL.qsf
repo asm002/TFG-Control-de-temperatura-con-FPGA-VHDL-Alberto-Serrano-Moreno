@@ -582,10 +582,10 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO12
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO13
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO14
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to IO15
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_global_assignment -name QIP_FILE "../ADQUISICION DE DATOS/PLL_IP.qip"
 set_global_assignment -name QIP_FILE "../ADQUISICION DE DATOS/ADC_IP/synthesis/ADC_IP.qip"
 set_global_assignment -name VHDL_FILE VHDL/TOP_LEVEL_ENTITY_CONTROL.vhd
-set_global_assignment -name VHDL_FILE "../Entidades generales/SINCRONIZADOR_ENTRADAS.vhd"
 set_global_assignment -name VHDL_FILE "../Entidades generales/GESTION_DISPLAYS.vhd"
 set_global_assignment -name VHDL_FILE "../Entidades generales/GENERADOR_PULSOS.vhd"
 set_global_assignment -name VHDL_FILE "../Entidades generales/DISPLAY.vhd"
@@ -610,4 +610,3 @@ set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADQUISICION_
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_DRIVER.vhd"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_A_MV.vhd"
 set_global_assignment -name VHDL_FILE "../ADQUISICION DE DATOS/VHDL/ADC_A_CELSIUS.vhd"
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
